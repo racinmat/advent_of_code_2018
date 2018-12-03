@@ -4,7 +4,6 @@ if __name__ == '__main__':
         for line in lines:
             changes.append(int(line))
 
-    print('loaded changes')
     frequencies = {0}
     curr_freq = 0
     found = False

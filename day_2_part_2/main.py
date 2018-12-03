@@ -25,4 +25,5 @@ if __name__ == '__main__':
     for letter_1, letter_2 in zip(word_1, word_2):
         if letter_1 == letter_2:
             same_part += letter_1
+
     print(same_part)
