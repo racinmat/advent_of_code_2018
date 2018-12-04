@@ -1,6 +1,5 @@
 import re
 from datetime import datetime
-
 import numpy as np
 import pandas as pd
 
@@ -60,9 +59,7 @@ if __name__ == '__main__':
     # building dataframe and doing calculations
     df = pd.DataFrame(day_records)
 
-    df['sleep_time'] = df[minute_columns].sum(axis=1)
-
-    total_sleeps = df.groupby('guard')['sleep_time'].sum().sort_values(ascending=False)
+    total_sleeps = df.groupby('guard')[minute_columns].sum(axis=1).sum(axis=1).sort_values(ascending=False)
     most_asleep_guard = total_sleeps.index[0]
 
     asleep_guard_schedule = df[df['guard'] == most_asleep_guard][minute_columns]
