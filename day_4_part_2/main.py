@@ -60,10 +60,8 @@ if __name__ == '__main__':
     # building dataframe and doing calculations
     df = pd.DataFrame(day_records)
 
-    df['sleep_time'] = df[minute_columns].sum(axis=1)
-
-    total_sleeps = df.groupby('guard')['sleep_time'].sum().sort_values(ascending=False)
-    most_asleep_guard = total_sleeps.index[0]
+    most_asleep_in_single_minute = df.groupby('guard')[minute_columns].sum().max(axis=1).sort_values(ascending=False)
+    most_asleep_guard = most_asleep_in_single_minute.index[0]
 
     asleep_guard_schedule = df[df['guard'] == most_asleep_guard][minute_columns]
     most_asleep_minute = asleep_guard_schedule.sum(axis=0).sort_values(ascending=False).index[0]
