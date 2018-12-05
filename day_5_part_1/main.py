@@ -1,18 +1,18 @@
-def shorten_sequence_once(sequence: str):
-    for i in range(len(sequence) - 1):
-        char_1 = sequence[i]
-        char_2 = sequence[i + 1]
-        if char_1 != char_2 and char_1.lower() == char_2.lower():
-            return sequence.replace(char_1 + char_2, '')
-    return sequence
+def invert(char: str):
+    return char.upper() if char.islower() else char.lower()
 
 
 def shorten_sequence(sequence: str):
-    shorter_sequence = shorten_sequence_once(sequence)
-    while len(shorter_sequence) < len(sequence):
-        sequence = shorter_sequence
-        shorter_sequence = shorten_sequence_once(sequence)
-    return shorter_sequence
+    stack = []
+    for char in sequence:
+        if stack:   # empty check
+            if char == invert(stack[-1]):
+                stack.pop()
+            else:
+                stack.append(char)
+        else:
+            stack.append(char)
+    return ''.join(stack)
 
 
 if __name__ == '__main__':
