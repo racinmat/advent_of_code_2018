@@ -7,8 +7,8 @@ if __name__ == '__main__':
     messages = []
     with open('../day_4_part_1/input.txt', encoding='utf-8') as lines:
         for line in lines:
-            m = re.match('\[(.*)\] (.*)', line)
-            date, message = m.groups()
+            date = line[1:17]
+            message = line[19:].replace('\n', '')
             date = datetime.strptime(date, '%Y-%m-%d %H:%M')
             messages.append((date, message))
 
@@ -18,11 +18,7 @@ if __name__ == '__main__':
     records = []
     curr_guard = None
     for date, message in messages:
-        if message == 'falls asleep':
-            pass
-        elif message == 'wakes up':
-            pass
-        else:
+        if message != 'falls asleep' and message != 'wakes up':
             m = re.match('Guard #(\d+) begins shift', message)
             curr_guard = m.group(1)
             message = 'begins shift'
@@ -34,9 +30,8 @@ if __name__ == '__main__':
     curr_day = np.zeros(60, dtype=np.int32)
     sleep_start = None
     curr_date = None
-    minute_columns = []
-    for i in range(len(curr_day)):
-        minute_columns.append(i)
+    minute_columns = list(range(len(curr_day)))
+
     for record in records:
         message = record['message']
         date = record['date']
@@ -45,23 +40,17 @@ if __name__ == '__main__':
         elif message == 'wakes up':
             curr_day[sleep_start:date.minute] = 1
             curr_date = date
-        elif message == 'begins shift':
+        else:
             curr_day = np.zeros(60)
             sleep_start = None
             curr_date = None
-        else:
-            raise RuntimeError('something fucked up')
-        record = {'guard': record['guard'], 'day': curr_date}
-        for col in minute_columns:
-            record[col] = curr_day[col]
-        day_records.append(record)
+        # adding multiple keys at once
+        day_record = {'guard': record['guard'], 'day': curr_date, **dict(enumerate(curr_day))}
+        day_records.append(day_record)
 
     # building dataframe and doing calculations
     df = pd.DataFrame(day_records)
 
-    most_asleep_in_single_minute = df.groupby('guard')[minute_columns].sum().max(axis=1).sort_values(ascending=False)
-    most_asleep_guard = most_asleep_in_single_minute.index[0]
-
-    asleep_guard_schedule = df[df['guard'] == most_asleep_guard][minute_columns]
-    most_asleep_minute = asleep_guard_schedule.sum(axis=0).sort_values(ascending=False).index[0]
+    most_asleep_guard = df.groupby('guard')[minute_columns].sum().max(axis=1).idxmax()
+    most_asleep_minute = df[df['guard'] == most_asleep_guard][minute_columns].sum(axis=0).idxmax()
     print(int(most_asleep_guard) * most_asleep_minute)
