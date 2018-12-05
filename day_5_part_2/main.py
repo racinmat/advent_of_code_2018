@@ -16,7 +16,13 @@ def shorten_sequence(sequence: str):
 
 
 if __name__ == '__main__':
-    with open('input.txt', encoding='utf-8') as lines:
+    with open('../day_5_part_1/input.txt', encoding='utf-8') as lines:
         sequence = next(lines)  # type: str
-    sequence = shorten_sequence(sequence)
-    print(len(sequence))
+    unique_chars = ''.join(set(sequence.lower()))
+
+    lengths = dict()
+    for char in unique_chars:
+        shorter_sequence = shorten_sequence(sequence.replace(char.lower(), '').replace(char.upper(), ''))
+
+        lengths[char] = len(shorter_sequence)
+    print(min(lengths.values()))
