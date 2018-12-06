@@ -19,8 +19,6 @@ def nearest_point(p):
 
 
 if __name__ == '__main__':
-    from time import time
-    start = time()
     suspects_list = []
     suspects_dict = dict()
     with open('input.txt', encoding='utf-8') as lines:
@@ -31,10 +29,7 @@ if __name__ == '__main__':
 
     suspects = np.array(suspects_list)
 
-    print(time() - start)
-
-    rect = np.zeros((suspects[:, 0].max(), suspects[:, 1].max()))
-    rect_2 = np.zeros((suspects[:, 0].max(), suspects[:, 1].max()))
+    rect = np.ones((suspects[:, 0].max(), suspects[:, 1].max())) * -1
 
     # frontier suspects are nearest neighbours of all border points and thus have infinity neighbours
     frontier_suspects = set()
@@ -47,23 +42,14 @@ if __name__ == '__main__':
     for point in border_points:
         frontier_suspects.add(nearest_point(point))
 
-    print(time() - start)
-
     enclosed_suspects = set(suspects_list) - frontier_suspects
 
-    for x in range(rect.shape[0]):
-        for y in range(rect.shape[1]):
-            rect[x, y] = suspects_dict[nearest_point((x, y))]
-
-    print(time() - start, 'usual')
-
-    # kd_tree = spatial.KDTree(suspects_list)
-    # indices = np.indices(rect_2.shape).reshape((2, -1))
-    # _, min_suspect_indices = kd_tree.query(indices.T, p=1, distance_upper_bound=max(rect.shape))
-    # rect_2[indices[0], indices[1]] = min_suspect_indices
-    # print(time() - start, 'kd tree')
-
-    print(np.allclose(rect, rect_2))
+    kd_tree = spatial.cKDTree(suspects_list)
+    indices = np.indices(rect.shape).reshape((2, -1))
+    distances, suspect_indices = kd_tree.query(indices.T, k=2, p=1, distance_upper_bound=max(rect.shape))
+    min_suspect_indices = suspect_indices[:, 0]
+    min_suspect_indices[distances[:, 0] - distances[:, 1] == 0] = -1
+    rect[indices[0], indices[1]] = min_suspect_indices
 
     frontier_indices = [suspects_dict[i] for i in enclosed_suspects]
     max_idx = None
@@ -75,4 +61,3 @@ if __name__ == '__main__':
             max_count = count
 
     print(max_count)
-    print(time() - start)
