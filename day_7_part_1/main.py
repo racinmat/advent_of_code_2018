@@ -1,4 +1,3 @@
-from scipy import spatial
 import numpy as np
 
 
@@ -7,8 +6,6 @@ def get_roots():
 
 
 if __name__ == '__main__':
-    from time import time
-    start = time()
     edges = []
     nodes = set()
 
@@ -41,4 +38,3 @@ if __name__ == '__main__':
         topological_order.append(root)
 
     print(''.join(topological_order))
-    print(time() - start)
