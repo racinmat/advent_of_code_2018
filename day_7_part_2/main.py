@@ -10,15 +10,15 @@ def task_time(node):
     # return ord(node) - 64
 
 
-def show_graph_with_labels(adjacency_matrix, mylabels):
-    rows, cols = np.where(adjacency_matrix == 1)
-    edges = zip(rows.tolist(), cols.tolist())
-    import networkx as nx
-    import matplotlib.pyplot as plt
-    gr = nx.DiGraph()
-    gr.add_edges_from(edges)
-    nx.draw(gr, node_size=500, labels=mylabels, with_labels=True, arrows=True)
-    plt.show()
+# def show_graph_with_labels(adjacency_matrix, mylabels):
+#     rows, cols = np.where(adjacency_matrix == 1)
+#     edges = zip(rows.tolist(), cols.tolist())
+#     import networkx as nx
+#     import matplotlib.pyplot as plt
+#     gr = nx.DiGraph()
+#     gr.add_edges_from(edges)
+#     nx.draw(gr, node_size=500, labels=mylabels, with_labels=True, arrows=True)
+#     plt.show()
 
 
 if __name__ == '__main__':
