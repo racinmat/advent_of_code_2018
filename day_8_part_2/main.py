@@ -19,11 +19,21 @@ class Node(object):
     def get_entries_sum(self):
         return sum(self.metadata) + sum([i.get_entries_sum() for i in self.children])
 
+    def get_value(self):
+        if len(self.children) == 0:
+            return sum(self.metadata)
+
+        return sum([self.children[metadatum - 1].get_value() for metadatum in self.metadata
+                    if metadatum <= len(self.children)])
+
 
 if __name__ == '__main__':
-    with open('input.txt', encoding='utf-8') as lines:
+    from time import time
+    start = time()
+    with open('../day_8_part_1/input.txt', encoding='utf-8') as lines:
         line = next(lines)
     data = [int(i) for i in line.split(' ')]
     root, _ = Node.parse_part(data)
 
-    print(root.get_entries_sum())
+    print(root.get_value())
+    print(time() - start)
