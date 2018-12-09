@@ -28,24 +28,24 @@ class Node(object):
 
 
 def part_1():
+    root = build_tree()
+    print(root.get_entries_sum())
+
+
+def build_tree():
     with open('input.txt', encoding='utf-8') as lines:
         line = next(lines)
     data = [int(i) for i in line.split(' ')]
     root, _ = Node.parse_part(data)
-
-    print(root.get_entries_sum())
+    return root
 
 
 def part_2():
-    from time import time
-    start = time()
-    with open('../day_8_part_1/input.txt', encoding='utf-8') as lines:
-        line = next(lines)
-    data = [int(i) for i in line.split(' ')]
-    root, _ = Node.parse_part(data)
-
+    # from time import time
+    # start = time()
+    root = build_tree()
     print(root.get_value())
-    print(time() - start)
+    # print(time() - start)
 
 
 if __name__ == '__main__':

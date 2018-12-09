@@ -15,16 +15,20 @@ def shorten_sequence(sequence: str):
     return ''.join(stack)
 
 
-def part_1():
+def load_sequence():
     with open('input.txt', encoding='utf-8') as lines:
         sequence = next(lines)  # type: str
+    return sequence
+
+
+def part_1():
+    sequence = load_sequence()
     sequence = shorten_sequence(sequence)
     print(len(sequence))
 
 
 def part_2():
-    with open('../day_5_part_1/input.txt', encoding='utf-8') as lines:
-        sequence = next(lines)  # type: str
+    sequence = load_sequence()
     unique_chars = ''.join(set(sequence.lower()))
 
     lengths = dict()

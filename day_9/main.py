@@ -1,7 +1,7 @@
 import re
 
 
-def add_marble(i, current):
+def add_marble(i, current, marbles):
     position = (current + 2) % len(marbles)
     if position == 0:
         position = len(marbles)
@@ -9,10 +9,10 @@ def add_marble(i, current):
     return position
 
 
-if __name__ == '__main__':
+def part_1():
     from time import time
     start = time()
-    with open('test_input.txt', encoding='utf-8') as lines:
+    with open('input.txt', encoding='utf-8') as lines:
         line = next(lines)
     m = re.match('(\d+) players; last marble is worth (\d+) points', line)
     num_players = int(m.group(1))
@@ -29,7 +29,7 @@ if __name__ == '__main__':
             current = removed_idx
             scores[curr_player] += i + removed
         else:
-            current = add_marble(i, current)
+            current = add_marble(i, current, marbles)
 
         # some debug printing
         # marbles_print = ['({})'.format(m) if i == current else str(m) for i, m in enumerate(marbles)]
@@ -41,7 +41,8 @@ if __name__ == '__main__':
     print(max(scores))
     print(time() - start)
 
-
+def part_2():
+    pass
 
 if __name__ == '__main__':
     part_1()

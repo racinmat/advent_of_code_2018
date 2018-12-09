@@ -6,13 +6,12 @@ def dist(p_1, p_2):
     return abs(p_1[0] - p_2[0]) + abs(p_1[1] - p_2[1])
 
 
-def nearest_point(p):
+def nearest_point(p, suspects_list):
     dist_dict = {suspect: dist(suspect, p) for suspect in suspects_list}
     return min(dist_dict, key=dist_dict.get)
 
 
-
-def part_1():
+def load_data():
     suspects_list = []
     suspects_dict = dict()
     with open('input.txt', encoding='utf-8') as lines:
@@ -20,8 +19,12 @@ def part_1():
             point = tuple([int(i) for i in line.replace('\n', '').split(', ')])
             suspects_list.append(point)
             suspects_dict[point] = idx
-
     suspects = np.array(suspects_list)
+    return suspects, suspects_dict, suspects_list
+
+
+def part_1():
+    suspects, suspects_dict, suspects_list = load_data()
 
     rect = np.ones((suspects[:, 0].max(), suspects[:, 1].max())) * -1
 
@@ -32,7 +35,7 @@ def part_1():
     border_points += [(0, i) for i in range(rect.shape[1])]
     border_points += [(rect.shape[0] - 1, i) for i in range(rect.shape[1])]
 
-    frontier_suspects = set([nearest_point(point) for point in border_points])
+    frontier_suspects = set([nearest_point(point, suspects_list) for point in border_points])
 
     enclosed_suspects = set(suspects_list) - frontier_suspects
 
@@ -51,13 +54,7 @@ def part_1():
 
 
 def part_2():
-    suspects_list = []
-    with open('../day_6_part_1/input.txt', encoding='utf-8') as lines:
-        for idx, line in enumerate(lines):
-            point = tuple([int(i) for i in line.replace('\n', '').split(', ')])
-            suspects_list.append(point)
-
-    suspects = np.array(suspects_list)
+    suspects, _, suspects_list = load_data()
 
     rect = np.ones((suspects[:, 0].max(), suspects[:, 1].max())) * -1
 

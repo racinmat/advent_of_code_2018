@@ -5,39 +5,19 @@ def get_roots(adjacency):
     return np.logical_and(adjacency.sum(axis=0) == 0, adjacency.sum(axis=1) > 0)
 
 
-def part_1():
+def load_graph():
     edges = []
     nodes = set()
-
     with open('input.txt', encoding='utf-8') as lines:
         for line in lines:
             node_from, node_to = line[5], line[36]
             edges.append((node_from, node_to))
             nodes.add(node_from)
             nodes.add(node_to)
-
     nodes = list(sorted(nodes))
     nodes_np = np.array(nodes)
     nodes_idx = {v: k for k, v in enumerate(nodes)}
-
-    adjacency = np.zeros((len(nodes), len(nodes)))
-    for node_from, node_to in edges:
-        adjacency[nodes_idx[node_from], nodes_idx[node_to]] = 1
-
-    topological_order = []
-
-    # must use DFS because of alphabetical ordering
-    while len(topological_order) < len(nodes):
-        roots = get_roots(adjacency)
-        root_nodes = sorted(nodes_np[roots])
-        if not root_nodes:  # adding leaves when no other nodes remain
-            root_nodes = list(set(nodes) - set(topological_order))
-        root = root_nodes[0]
-        root_idx = nodes_idx[root]
-        adjacency[root_idx, :] = 0
-        topological_order.append(root)
-
-    print(''.join(topological_order))
+    return edges, nodes, nodes_idx, nodes_np
 
 
 def task_time(node):
@@ -56,27 +36,41 @@ def show_graph_with_labels(adjacency_matrix, mylabels):
     plt.show()
 
 
+def get_root_nodes(adjacency, nodes, nodes_np, topological_order):
+    roots = get_roots(adjacency)
+    root_nodes = sorted(nodes_np[roots])
+    if not root_nodes:  # adding leaves when no other nodes remain
+        root_nodes = list(set(nodes) - set(topological_order))
+    return root_nodes
+
+
+def remove_root(adjacency, nodes_idx, root, topological_order):
+    root_idx = nodes_idx[root]
+    adjacency[root_idx, :] = 0
+    topological_order.append(root)
+
+
+def part_1():
+    edges, nodes, nodes_idx, nodes_np = load_graph()
+    adjacency = build_adjacency_matrix(edges, nodes, nodes_idx)
+
+    topological_order = []
+
+    # must use DFS because of alphabetical ordering
+    while len(topological_order) < len(nodes):
+        root_nodes = get_root_nodes(adjacency, nodes, nodes_np, topological_order)
+        root = root_nodes[0]
+        remove_root(adjacency, nodes_idx, root, topological_order)
+
+    print(''.join(topological_order))
+
+
 def part_2():
     # from time import time
 
     # start = time()
-    edges = []
-    nodes = set()
-
-    with open('../day_7_part_1/input.txt', encoding='utf-8') as lines:
-        for line in lines:
-            node_from, node_to = line[5], line[36]
-            edges.append((node_from, node_to))
-            nodes.add(node_from)
-            nodes.add(node_to)
-
-    nodes = list(sorted(nodes))
-    nodes_np = np.array(nodes)
-    nodes_idx = {v: k for k, v in enumerate(nodes)}
-
-    adjacency = np.zeros((len(nodes), len(nodes)))
-    for node_from, node_to in edges:
-        adjacency[nodes_idx[node_from], nodes_idx[node_to]] = 1
+    edges, nodes, nodes_idx, nodes_np = load_graph()
+    adjacency = build_adjacency_matrix(edges, nodes, nodes_idx)
 
     # show_graph_with_labels(adjacency, {k: v for k, v in enumerate(nodes)})
     topological_order = []
@@ -89,10 +83,7 @@ def part_2():
     # print('Second  W0  W1  W2  W3  W4   Open  Done')
 
     while len(topological_order) < len(nodes):
-        roots = get_roots(adjacency)
-        root_nodes = sorted(nodes_np[roots])
-        if not root_nodes:  # adding leaves when no other nodes remain
-            root_nodes = list(set(nodes) - set(topological_order))
+        root_nodes = get_root_nodes(adjacency, nodes, nodes_np, topological_order)
         root_nodes = sorted(set(root_nodes) - set(workers_task))  # skipping WIP
 
         for i in range(workers_num):
@@ -115,15 +106,20 @@ def part_2():
                 continue
             done_task = workers_task[i]
             if done_task is not None:
-                topological_order.append(done_task)
-                task_idx = nodes_idx[done_task]
-                adjacency[task_idx, :] = 0
+                remove_root(adjacency, nodes_idx, done_task, topological_order)
                 workers_task[i] = None
 
         second += jump
 
     print(second)
     # print(time() - start)
+
+
+def build_adjacency_matrix(edges, nodes, nodes_idx):
+    adjacency = np.zeros((len(nodes), len(nodes)))
+    for node_from, node_to in edges:
+        adjacency[nodes_idx[node_from], nodes_idx[node_to]] = 1
+    return adjacency
 
 
 if __name__ == '__main__':
