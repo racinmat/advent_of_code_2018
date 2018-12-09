@@ -15,7 +15,14 @@ def shorten_sequence(sequence: str):
     return ''.join(stack)
 
 
-if __name__ == '__main__':
+def part_1():
+    with open('input.txt', encoding='utf-8') as lines:
+        sequence = next(lines)  # type: str
+    sequence = shorten_sequence(sequence)
+    print(len(sequence))
+
+
+def part_2():
     with open('../day_5_part_1/input.txt', encoding='utf-8') as lines:
         sequence = next(lines)  # type: str
     unique_chars = ''.join(set(sequence.lower()))
@@ -26,3 +33,8 @@ if __name__ == '__main__':
 
         lengths[unique_char] = len(shorter_sequence)
     print(min(lengths.values()))
+
+
+if __name__ == '__main__':
+    part_1()
+    part_2()

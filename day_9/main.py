@@ -10,7 +10,9 @@ def add_marble(i, current):
 
 
 if __name__ == '__main__':
-    with open('input.txt', encoding='utf-8') as lines:
+    from time import time
+    start = time()
+    with open('test_input.txt', encoding='utf-8') as lines:
         line = next(lines)
     m = re.match('(\d+) players; last marble is worth (\d+) points', line)
     num_players = int(m.group(1))
@@ -37,3 +39,10 @@ if __name__ == '__main__':
         curr_player = (curr_player + 1) % num_players
 
     print(max(scores))
+    print(time() - start)
+
+
+
+if __name__ == '__main__':
+    part_1()
+    part_2()

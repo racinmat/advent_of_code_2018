@@ -1,8 +1,43 @@
 import numpy as np
 
 
-def get_roots():
+def get_roots(adjacency):
     return np.logical_and(adjacency.sum(axis=0) == 0, adjacency.sum(axis=1) > 0)
+
+
+def part_1():
+    edges = []
+    nodes = set()
+
+    with open('input.txt', encoding='utf-8') as lines:
+        for line in lines:
+            node_from, node_to = line[5], line[36]
+            edges.append((node_from, node_to))
+            nodes.add(node_from)
+            nodes.add(node_to)
+
+    nodes = list(sorted(nodes))
+    nodes_np = np.array(nodes)
+    nodes_idx = {v: k for k, v in enumerate(nodes)}
+
+    adjacency = np.zeros((len(nodes), len(nodes)))
+    for node_from, node_to in edges:
+        adjacency[nodes_idx[node_from], nodes_idx[node_to]] = 1
+
+    topological_order = []
+
+    # must use DFS because of alphabetical ordering
+    while len(topological_order) < len(nodes):
+        roots = get_roots(adjacency)
+        root_nodes = sorted(nodes_np[roots])
+        if not root_nodes:  # adding leaves when no other nodes remain
+            root_nodes = list(set(nodes) - set(topological_order))
+        root = root_nodes[0]
+        root_idx = nodes_idx[root]
+        adjacency[root_idx, :] = 0
+        topological_order.append(root)
+
+    print(''.join(topological_order))
 
 
 def task_time(node):
@@ -10,18 +45,18 @@ def task_time(node):
     # return ord(node) - 64
 
 
-# def show_graph_with_labels(adjacency_matrix, mylabels):
-#     rows, cols = np.where(adjacency_matrix == 1)
-#     edges = zip(rows.tolist(), cols.tolist())
-#     import networkx as nx
-#     import matplotlib.pyplot as plt
-#     gr = nx.DiGraph()
-#     gr.add_edges_from(edges)
-#     nx.draw(gr, node_size=500, labels=mylabels, with_labels=True, arrows=True)
-#     plt.show()
+def show_graph_with_labels(adjacency_matrix, mylabels):
+    rows, cols = np.where(adjacency_matrix == 1)
+    edges = zip(rows.tolist(), cols.tolist())
+    import networkx as nx
+    import matplotlib.pyplot as plt
+    gr = nx.DiGraph()
+    gr.add_edges_from(edges)
+    nx.draw(gr, node_size=500, labels=mylabels, with_labels=True, arrows=True)
+    plt.show()
 
 
-if __name__ == '__main__':
+def part_2():
     # from time import time
 
     # start = time()
@@ -54,7 +89,7 @@ if __name__ == '__main__':
     # print('Second  W0  W1  W2  W3  W4   Open  Done')
 
     while len(topological_order) < len(nodes):
-        roots = get_roots()
+        roots = get_roots(adjacency)
         root_nodes = sorted(nodes_np[roots])
         if not root_nodes:  # adding leaves when no other nodes remain
             root_nodes = list(set(nodes) - set(topological_order))
@@ -71,7 +106,7 @@ if __name__ == '__main__':
             workers_task[i] = task
             # all tasks allocated
 
-        jump = max(1, int(workers_remaining[workers_remaining > 0].min()))    # fast forward some iterations
+        jump = max(1, int(workers_remaining[workers_remaining > 0].min()))  # fast forward some iterations
 
         for i in range(workers_num):
             workers_remaining[i] -= jump  # tick
@@ -89,3 +124,8 @@ if __name__ == '__main__':
 
     print(second)
     # print(time() - start)
+
+
+if __name__ == '__main__':
+    part_1()
+    part_2()

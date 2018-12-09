@@ -1,6 +1,14 @@
-if __name__ == '__main__':
+def part_1():
+    total = 0
+    with open('input.txt') as lines:
+        for line in lines:
+            total += int(line)
+    print(total)
+
+
+def part_2():
     changes = []
-    with open('../day_1_part_1/input.txt') as lines:
+    with open('input.txt') as lines:
         for line in lines:
             changes.append(int(line))
 
@@ -16,3 +24,8 @@ if __name__ == '__main__':
             frequencies.add(curr_freq)
 
     print(curr_freq)
+
+
+if __name__ == '__main__':
+    part_1()
+    part_2()
