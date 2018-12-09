@@ -1,4 +1,5 @@
 import re
+from collections import deque
 
 
 def load_rules():
@@ -10,31 +11,23 @@ def load_rules():
     return num_players, num_turns
 
 
-def add_marble(i, current, marbles):
-    position = (current + 2) % len(marbles)
-    if position == 0:
-        position = len(marbles)
-    marbles.insert(position, i)
-    return position
-
-
 def play_game(num_players, num_turns):
-    marbles = [0]
+    marbles = deque([0])
     scores = [0] * num_players
-    current = 1
     curr_player = 1
     for i in range(1, num_turns):
         if i % 23 == 0:
-            removed_idx = (current - 7) % len(marbles)
-            removed = marbles.pop(removed_idx)
-            current = removed_idx
+            marbles.rotate(8)
+            removed = marbles.popleft()
             scores[curr_player] += i + removed
+            marbles.rotate(-1)
         else:
-            current = add_marble(i, current, marbles)
+            marbles.rotate(-1)
+            marbles.append(i)
 
         # some debug printing
         # marbles_print = ['({})'.format(m) if i == current else str(m) for i, m in enumerate(marbles)]
-        # print([curr_player], ''.join([m.rjust(4) for m in marbles_print]))
+        # print([curr_player], ''.join([str(m).rjust(4) for m in marbles]))
         # if i % 23 == 0:
         #     print(scores)
         curr_player = (curr_player + 1) % num_players
@@ -66,4 +59,4 @@ def part_2():
 
 if __name__ == '__main__':
     part_1()
-    # part_2()
+    part_2()
