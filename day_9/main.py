@@ -1,6 +1,15 @@
 import re
 
 
+def load_rules():
+    with open('input.txt', encoding='utf-8') as lines:
+        line = next(lines)
+    m = re.match('(\d+) players; last marble is worth (\d+) points', line)
+    num_players = int(m.group(1))
+    num_turns = int(m.group(2))
+    return num_players, num_turns
+
+
 def add_marble(i, current, marbles):
     position = (current + 2) % len(marbles)
     if position == 0:
@@ -9,15 +18,7 @@ def add_marble(i, current, marbles):
     return position
 
 
-def part_1():
-    from time import time
-    start = time()
-    with open('input.txt', encoding='utf-8') as lines:
-        line = next(lines)
-    m = re.match('(\d+) players; last marble is worth (\d+) points', line)
-    num_players = int(m.group(1))
-    num_turns = int(m.group(2))
-
+def play_game(num_players, num_turns):
     marbles = [0]
     scores = [0] * num_players
     current = 1
@@ -37,13 +38,32 @@ def part_1():
         # if i % 23 == 0:
         #     print(scores)
         curr_player = (curr_player + 1) % num_players
+    return scores
+
+
+def part_1():
+    from time import time
+    start = time()
+    num_players, num_turns = load_rules()
+
+    scores = play_game(num_players, num_turns)
 
     print(max(scores))
     print(time() - start)
 
+
 def part_2():
-    pass
+    from time import time
+    start = time()
+    num_players, num_turns = load_rules()
+    num_turns *= 100
+
+    scores = play_game(num_players, num_turns)
+
+    print(max(scores))
+    print(time() - start)
+
 
 if __name__ == '__main__':
     part_1()
-    part_2()
+    # part_2()
