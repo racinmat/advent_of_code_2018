@@ -10,7 +10,7 @@ def add_marble(i, current):
 
 
 if __name__ == '__main__':
-    with open('test_input.txt', encoding='utf-8') as lines:
+    with open('input.txt', encoding='utf-8') as lines:
         line = next(lines)
     m = re.match('(\d+) players; last marble is worth (\d+) points', line)
     num_players = int(m.group(1))
@@ -25,10 +25,11 @@ if __name__ == '__main__':
             removed_idx = (current - 7) % len(marbles)
             removed = marbles.pop(removed_idx)
             current = removed_idx
-            scores[curr_player] += 23 + removed
+            scores[curr_player] += i + removed
         else:
             current = add_marble(i, current)
 
+        # some debug printing
         # marbles_print = ['({})'.format(m) if i == current else str(m) for i, m in enumerate(marbles)]
         # print([curr_player], ''.join([m.rjust(4) for m in marbles_print]))
         # if i % 23 == 0:
