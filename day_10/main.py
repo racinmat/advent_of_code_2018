@@ -24,6 +24,10 @@ def points_to_matrix(points):
     return matrix
 
 
+def get_points_shape(points):
+    return points[:, 1].max() - points[:, 1].min(), points[:, 0].max() - points[:, 0].min()
+
+
 def part_1():
     points, velocities = load_points()
     curr_points = points.copy()
@@ -32,7 +36,7 @@ def part_1():
     for i in range(100000):
         curr_points += velocities
         # don't need to build matrix to analyze its shape
-        matrix_shape = (curr_points[:, 1].max() + 1, curr_points[:, 0].max() + 1)
+        matrix_shape = get_points_shape(curr_points)
         matrix_sizes.append(matrix_shape)
         # print(matrix_shape)
         if i > 2 and (matrix_sizes[-1][0] > matrix_sizes[-2][0] or matrix_sizes[-1][1] > matrix_sizes[-2][1]):
@@ -66,7 +70,7 @@ def part_2():
     for i in range(100000):
         curr_points += velocities
         # don't need to build matrix to analyze its shape
-        matrix_shape = (curr_points[:, 1].max() + 1, curr_points[:, 0].max() + 1)
+        matrix_shape = get_points_shape(curr_points)
         matrix_sizes.append(matrix_shape)
         # print(matrix_shape)
         if i > 2 and (matrix_sizes[-1][0] > matrix_sizes[-2][0] or matrix_sizes[-1][1] > matrix_sizes[-2][1]):
