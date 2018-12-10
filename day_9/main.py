@@ -31,22 +31,6 @@ def play_game(num_players, num_turns):
     return max(scores)
 
 
-def play_game_2(max_players, last_marble):
-    scores = [0] * max_players
-    circle = deque([0])
-
-    for marble in range(1, last_marble + 1):
-        if marble % 23 == 0:
-            circle.rotate(7)
-            scores[marble % max_players] += marble + circle.pop()
-            circle.rotate(-1)
-        else:
-            circle.rotate(-1)
-            circle.append(marble)
-
-    return max(scores)
-
-
 def part_1():
     # from time import time
     # start = time()

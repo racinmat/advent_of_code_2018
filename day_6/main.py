@@ -26,7 +26,7 @@ def load_data():
 def part_1():
     suspects, suspects_dict, suspects_list = load_data()
 
-    rect = np.ones((suspects[:, 0].max(), suspects[:, 1].max())) * -1
+    rect = np.ones((suspects[:, 0].max()+1, suspects[:, 1].max()+1)) * -1
 
     # frontier suspects are nearest neighbours of all border points and thus have infinity neighbours
     border_points = []
