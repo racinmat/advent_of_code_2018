@@ -47,16 +47,16 @@ def part_1():
 
     print(smallest_time)
     # analyzing shapes
-    for i in range(smallest_time - 10, smallest_time + 10):
+    for i in range(smallest_time - 5, smallest_time + 5):
         curr_points = points + i * velocities
         matrix = points_to_matrix(curr_points)
 
         # text printing, good only for small matrices
-        # string_matrix = np.chararray(matrix.shape)
-        # string_matrix[:] = '.'
-        # string_matrix[matrix == 1] = '#'
-        # [print(''.join(i)) for i in string_matrix.decode('utf-8')]
-        # print()
+        string_matrix = np.chararray(matrix.shape)
+        string_matrix[:] = '.'
+        string_matrix[matrix == 1] = '#'
+        [print(''.join(i)) for i in string_matrix.decode('utf-8')]
+        print()
 
         # saving as image
         Image.fromarray((1 - matrix) * 255).save('im-{}.png'.format(i))
