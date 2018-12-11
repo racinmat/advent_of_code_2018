@@ -1,5 +1,5 @@
 import numpy as np
-from scipy import signal
+from scipy import signal, ndimage
 
 
 def load_grid_serial_number():
@@ -23,7 +23,11 @@ def build_power_levels(serial_number):
 
 def get_highest_energy_cell(power_level, window_size):
     # sum_window = signal.convolve2d(power_level, np.ones((window_size, window_size)), mode='same')
-    # signal.fftconvolve is 1-2 orders of magnitude faster than signal.convolve2d
+    # signal.fftconvolve is 1-2 orders of magnitude faster than signal.convolve2d on matrix 300x300
+    # signal.fftconvolve is 1-2 orders of magnitude faster than signal.fftconvolve on matrix 300x300
+    # signal.fftconvolve is much faster especially for large convolution windows
+    # sum_window = ndimage.convolve(power_level, np.ones((window_size, window_size)), mode='constant')
+    #
     sum_window = signal.fftconvolve(power_level, np.ones((window_size, window_size)), mode='same')
     highest_energy_coords = np.unravel_index(sum_window.argmax(), sum_window.shape)
 
@@ -42,7 +46,10 @@ def get_highest_energy_cell_in_range(power_level, min_window_size, max_window_si
             most_highest_energy = highest_energy
             best_size = i
             # print(highest_boords, best_size)
+    #   indices for signal.convolve2d and signal.fftconvolve
     return (highest_boords[0] - int(best_size / 2) + 1, highest_boords[1] - int(best_size / 2) + 1), best_size
+    #   indices for ndimage.convolve
+    # return (highest_boords[0] - int(best_size / 2) + 2, highest_boords[1] - int(best_size / 2) + 2), best_size
 
 
 def part_1():
@@ -61,12 +68,13 @@ def part_2():
 
 
 if __name__ == '__main__':
-    # from time import time
+    from time import time
     #
-    # start = time()
-    # assert get_highest_energy_cell(build_power_levels(18), 3)[0] == (33, 45)
-    # assert get_highest_energy_cell(build_power_levels(42), 3)[0] == (21, 61)
-    # assert get_highest_energy_cell_in_range(build_power_levels(18), 1, 20) == ((90, 269), 16)
-    # assert get_highest_energy_cell_in_range(build_power_levels(42), 1, 20) == ((232, 251), 12)
+    start = time()
+    assert get_highest_energy_cell(build_power_levels(18), 3)[0] == (33, 45)
+    assert get_highest_energy_cell(build_power_levels(42), 3)[0] == (21, 61)
+    assert get_highest_energy_cell_in_range(build_power_levels(18), 1, 40) == ((90, 269), 16)
+    assert get_highest_energy_cell_in_range(build_power_levels(42), 1, 40) == ((232, 251), 12)
     part_1()
     part_2()
+    print(time() - start)
