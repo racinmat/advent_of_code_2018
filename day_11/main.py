@@ -1,6 +1,5 @@
 import numpy as np
 from scipy import signal
-from numpy.fft import fft2, ifft2
 
 
 def load_grid_serial_number():
@@ -23,11 +22,12 @@ def build_power_levels(serial_number):
 
 
 def get_highest_energy_cell(power_level, window_size):
-    # biggest_window = signal.convolve2d(power_level, np.ones((window_size, window_size)), boundary='symm', mode='same')
-    biggest_window = signal.convolve2d(power_level, np.ones((window_size, window_size)), mode='same')
-    highest_energy_coords = np.unravel_index(biggest_window.argmax(), biggest_window.shape)
+    # sum_window = signal.convolve2d(power_level, np.ones((window_size, window_size)), mode='same')
+    # signal.fftconvolve is 1-2 orders of magnitude faster than signal.convolve2d
+    sum_window = signal.fftconvolve(power_level, np.ones((window_size, window_size)), mode='same')
+    highest_energy_coords = np.unravel_index(sum_window.argmax(), sum_window.shape)
 
-    return highest_energy_coords, biggest_window.max()
+    return highest_energy_coords, sum_window.max()
 
 
 def get_highest_energy_cell_in_range(power_level, min_window_size, max_window_size):
@@ -55,40 +55,18 @@ def part_1():
 def part_2():
     serial_number = load_grid_serial_number()
     power_level = build_power_levels(serial_number)
-    most_highest_energy = -1
-    most_highest_energy_coords = -1
-    highest_window_size = -1
 
-    highest_energy_coords, highest_energy = get_highest_energy_cell(power_level, 13)
-    if highest_energy > most_highest_energy:
-        most_highest_energy_coords = highest_energy_coords
-        most_highest_energy = highest_energy
-        highest_window_size = 13
-        print(most_highest_energy_coords, highest_window_size)
-
-    for i in range(0, 300):
-        print(i)
-        highest_energy_coords, highest_energy = get_highest_energy_cell(power_level, i)
-        if highest_energy > most_highest_energy:
-            most_highest_energy_coords = highest_energy_coords
-            most_highest_energy = highest_energy
-            highest_window_size = i
-            print(most_highest_energy_coords, highest_window_size)
-    print(most_highest_energy_coords, highest_window_size)
+    highest_energy_coords, highest_window_size = get_highest_energy_cell_in_range(power_level, 1, 300)
+    print(highest_energy_coords, highest_window_size)
 
 
 if __name__ == '__main__':
-    from time import time
-
-    start = time()
-    assert get_highest_energy_cell(build_power_levels(18), 3)[0] == (33, 45)
-    assert get_highest_energy_cell(build_power_levels(42), 3)[0] == (21, 61)
-    assert get_highest_energy_cell_in_range(build_power_levels(18), 1, 20) == ((90, 269), 16)
-    assert get_highest_energy_cell_in_range(build_power_levels(42), 1, 20) == ((232, 251), 12)
+    # from time import time
+    #
+    # start = time()
+    # assert get_highest_energy_cell(build_power_levels(18), 3)[0] == (33, 45)
+    # assert get_highest_energy_cell(build_power_levels(42), 3)[0] == (21, 61)
+    # assert get_highest_energy_cell_in_range(build_power_levels(18), 1, 20) == ((90, 269), 16)
+    # assert get_highest_energy_cell_in_range(build_power_levels(42), 1, 20) == ((232, 251), 12)
     part_1()
-    print(time() - start)
-
-    print(get_highest_energy_cell_in_range(build_power_levels(2187), 1, 30))
-    # part_2()
-# (238, 45) 13
-# 232,39,13
+    part_2()
