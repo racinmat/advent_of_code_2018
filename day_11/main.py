@@ -69,12 +69,13 @@ def part_2():
 
 if __name__ == '__main__':
     from time import time
-    #
     start = time()
+
     assert get_highest_energy_cell(build_power_levels(18), 3)[0] == (33, 45)
     assert get_highest_energy_cell(build_power_levels(42), 3)[0] == (21, 61)
     assert get_highest_energy_cell_in_range(build_power_levels(18), 1, 40) == ((90, 269), 16)
     assert get_highest_energy_cell_in_range(build_power_levels(42), 1, 40) == ((232, 251), 12)
     part_1()
     part_2()
+
     print(time() - start)
