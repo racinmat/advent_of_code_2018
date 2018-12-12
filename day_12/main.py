@@ -16,17 +16,36 @@ def load_plants():
     return initial, rules
 
 
-def calc_next_generation(plants, rules):
-    plants = np.pad(plants, 4, 'constant', constant_values=0)
+def apply_rules_for_generation(plants, rules):
     new_gen_plants = np.zeros_like(plants)
+
     for i in range(2, len(plants) - 2):
         part = tuple(plants[i - 2:i + 3])
         if part in rules:
             new_gen_plants[i] = rules[part]
+    return new_gen_plants
+
+
+def apply_rules_for_generation_conv(plants, rules):
+    new_gen_plants = np.zeros_like(plants)
+    rules_np = np.array(list(rules.keys()))
+    rules_results = list(rules.values())
+    for i, rule in enumerate(rules_np):
+        indices = np.where(np.convolve(plants * 2 - 1, (rule * 2 - 1)[::-1], mode='valid') == len(rule))[0]
+        indices += 2    # to align indices to the middle of array
+        new_gen_plants[indices] = rules_results[i]
+    return new_gen_plants
+
+
+def calc_next_generation(plants, rules):
+    plants = np.pad(plants, 4, 'constant', constant_values=0)
+    # new_gen_plants = apply_rules_for_generation(plants, rules)
+    new_gen_plants = apply_rules_for_generation_conv(plants, rules)
+    # assert np.allclose(new_gen_plants, new_gen_plants_conv)
     plants_indices = np.where(new_gen_plants == 1)[0]
     plants_start = plants_indices.min()
     plants_end = plants_indices.max()
-    return new_gen_plants[plants_start: plants_end+1], plants_start - 4
+    return new_gen_plants[plants_start: plants_end + 1], plants_start - 4
 
 
 def part_1():
