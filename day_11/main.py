@@ -24,7 +24,7 @@ def build_power_levels(serial_number):
 def get_highest_energy_cell(power_level, window_size):
     # sum_window = signal.convolve2d(power_level, np.ones((window_size, window_size)), mode='same')
     # signal.fftconvolve is 1-2 orders of magnitude faster than signal.convolve2d on matrix 300x300
-    # signal.fftconvolve is 1-2 orders of magnitude faster than signal.fftconvolve on matrix 300x300
+    # signal.fftconvolve is 1-2 orders of magnitude faster than ndimage on matrix 300x300
     # signal.fftconvolve is much faster especially for large convolution windows
     # sum_window = ndimage.convolve(power_level, np.ones((window_size, window_size)), mode='constant')
     #
