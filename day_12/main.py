@@ -17,9 +17,7 @@ def load_plants():
 
 
 def calc_next_generation(plants, rules):
-    rescaled_plants = np.zeros(len(plants) + 8)
-    rescaled_plants[4:-4] = plants
-    plants = rescaled_plants
+    plants = np.pad(plants, 4, 'constant', constant_values=0)
     new_gen_plants = np.zeros_like(plants)
     for i in range(2, len(plants) - 2):
         part = tuple(plants[i - 2:i + 3])
@@ -40,8 +38,6 @@ def part_1():
         plants, offset = calc_next_generation(plants, rules)
         total_offset += offset
         # print(''.join(map(str, plants)))
-    plants = np.array(plants)
-    # plants_indices = np.where(plants == '#')[0] + total_offset
     plants_indices = np.where(plants == 1)[0] + total_offset
     total_sum = np.sum(plants_indices)
     print(total_sum)
