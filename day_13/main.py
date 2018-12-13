@@ -21,7 +21,7 @@ NEXT_TIEBREAK = {
 
 def load_map():
     lines_array = []
-    with open('test_input.txt', encoding='utf-8') as lines:
+    with open('input.txt', encoding='utf-8') as lines:
         for line in lines:
             lines_array.append(list(line.replace('\n', '')))
     string_map = np.array(lines_array)
@@ -85,10 +85,10 @@ def print_grid(grid, cart_locations, cart_directions):
     print()
 
 
-def tick(grid, cart_locations, cart_directions, cart_next_tiebreaks):
-    for i in np.lexsort(cart_locations):
+def tick(grid, cart_locations, cart_directions, cart_next_tiebreaks, raise_on_crash=False):
+    for i in np.lexsort(np.flip(cart_locations.T, 0)):  # annoying, but this creates correct ordering by coordinates
         cart_loc = cart_locations[i].copy()
-        cart_loc_tupl = tuple(cart_locations[i])
+        cart_loc_tupl = tuple(cart_loc)
         cart_dir = cart_directions[i]
         tiebreak = cart_next_tiebreaks[i]
         map_pos = grid[cart_loc_tupl]
@@ -98,7 +98,8 @@ def tick(grid, cart_locations, cart_directions, cart_next_tiebreaks):
                 cart_loc += MOVE[cart_dir]
             else:
                 indices = np.indices(map_pos.shape)
-                available_dirs = (indices >= cart_dir - 1) & (indices <= cart_dir + 1) * map_pos
+                available_indices = np.isin(indices, [(cart_dir - 1) % 4, (cart_dir + 1) % 4])
+                available_dirs = available_indices * map_pos
                 new_dir = np.argmax(map_pos & available_dirs)
                 cart_loc += MOVE[new_dir]
                 cart_dir = new_dir
@@ -107,7 +108,7 @@ def tick(grid, cart_locations, cart_directions, cart_next_tiebreaks):
             cart_loc += MOVE[new_cart_dir]
             cart_next_tiebreaks[i] = NEXT_TIEBREAK[tiebreak]
             cart_dir = new_cart_dir
-        if cart_loc.tolist() in cart_locations.tolist():
+        if cart_loc.tolist() in cart_locations.tolist() and raise_on_crash:
             raise CollisionException(cart_loc)
         cart_locations[i] = cart_loc
         cart_directions[i] = cart_dir
@@ -115,19 +116,25 @@ def tick(grid, cart_locations, cart_directions, cart_next_tiebreaks):
 
 def part_1():
     grid, cart_locations, cart_directions, cart_next_tiebreaks = load_map()
-    print_grid(grid, cart_locations, cart_directions)
+    # print_grid(grid, cart_locations, cart_directions)
     try:
-        # while True:
-        for i in range(20):
-            tick(grid, cart_locations, cart_directions, cart_next_tiebreaks)
-            print_grid(grid, cart_locations, cart_directions)
+        while True:
+            tick(grid, cart_locations, cart_directions, cart_next_tiebreaks, raise_on_crash=True)
+            # print_grid(grid, cart_locations, cart_directions)
     #         todo: add printing
     except CollisionException as e:
-        print(e.message)
-
+        print(np.flip(e.args[0], 0).tolist())
 
 def part_2():
-    pass
+    grid, cart_locations, cart_directions, cart_next_tiebreaks = load_map()
+    # print_grid(grid, cart_locations, cart_directions)
+    try:
+        while True:
+            tick(grid, cart_locations, cart_directions, cart_next_tiebreaks, raise_on_crash=True)
+            # print_grid(grid, cart_locations, cart_directions)
+    #         todo: add printing
+    except CollisionException as e:
+        print(np.flip(e.args[0], 0).tolist())
 
 
 if __name__ == '__main__':
