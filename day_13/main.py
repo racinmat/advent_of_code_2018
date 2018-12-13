@@ -27,6 +27,18 @@ def load_map():
     string_map = np.array(lines_array)
     grid = np.ones(string_map.shape + (4,), dtype=np.int8) * 0
 
+    # defining cart things before grid so I can replace those by lines to easier parsing
+    cart_locations_tuple = np.where(np.isin(string_map, ['>', '^', 'v', '<']))
+    cart_locations = np.array(cart_locations_tuple)
+    cart_directions = (string_map[cart_locations_tuple] == '>') * RIGHT + \
+                      (string_map[cart_locations_tuple] == '^') * UP + \
+                      (string_map[cart_locations_tuple] == '<') * LEFT + \
+                      (string_map[cart_locations_tuple] == 'v') * DOWN
+    cart_next_tiebreaks = np.zeros_like(cart_directions)
+
+    string_map[np.isin(string_map, ['<', '>'])] = '-'
+    string_map[np.isin(string_map, ['^', 'v'])] = '|'
+
     grid[string_map == '|', UP] = 1
     grid[string_map == '|', DOWN] = 1
 
@@ -35,30 +47,16 @@ def load_map():
 
     grid[string_map == '+', :] = 1
 
-    grid[(string_map == '/') & (np.roll(string_map, -1, axis=1) == '-'), RIGHT] = 1
-    grid[(string_map == '/') & (np.roll(string_map, -1, axis=0) == '|'), DOWN] = 1
-    grid[(string_map == '/') & (np.roll(string_map, 1, axis=1) == '-'), LEFT] = 1
-    grid[(string_map == '/') & (np.roll(string_map, 1, axis=0) == '|'), UP] = 1
+    grid[(string_map == '/') & (np.isin(np.roll(string_map, -1, axis=1), ['-', '+'])), RIGHT] = 1
+    grid[(string_map == '/') & (np.isin(np.roll(string_map, -1, axis=0), ['|', '+'])), DOWN] = 1
+    grid[(string_map == '/') & (np.isin(np.roll(string_map, 1, axis=1), ['-', '+'])), LEFT] = 1
+    grid[(string_map == '/') & (np.isin(np.roll(string_map, 1, axis=0), ['|', '+'])), UP] = 1
 
-    grid[string_map == '<', LEFT] = 1
-    grid[string_map == '>', LEFT] = 1
-    grid[string_map == '<', RIGHT] = 1
-    grid[string_map == '>', RIGHT] = 1
+    grid[(string_map == '\\') & (np.isin(np.roll(string_map, -1, axis=1), ['-', '+'])), RIGHT] = 1
+    grid[(string_map == '\\') & (np.isin(np.roll(string_map, 1, axis=0), ['|', '+'])), UP] = 1
+    grid[(string_map == '\\') & (np.isin(np.roll(string_map, 1, axis=1), ['-', '+'])), LEFT] = 1
+    grid[(string_map == '\\') & (np.isin(np.roll(string_map, -1, axis=0), ['|', '+'])), DOWN] = 1
 
-    grid[string_map == '^', UP] = 1
-    grid[string_map == 'v', UP] = 1
-    grid[string_map == '^', DOWN] = 1
-    grid[string_map == 'v', DOWN] = 1
-
-    # todo: doplnit ještě podle aut a podle \/
-
-    cart_locations_tuple = np.where(np.isin(string_map, ['>', '^', 'v', '<']))
-    cart_locations = np.array(cart_locations_tuple)
-    cart_directions = (string_map[cart_locations_tuple] == '>') * RIGHT + \
-                      (string_map[cart_locations_tuple] == '^') * UP + \
-                      (string_map[cart_locations_tuple] == '<') * LEFT + \
-                      (string_map[cart_locations_tuple] == 'v') * DOWN
-    cart_next_tiebreaks = np.zeros_like(cart_directions)
     return grid, cart_locations, cart_directions, cart_next_tiebreaks
 
 
@@ -69,6 +67,14 @@ class CollisionException(RuntimeError):
 def print_grid(grid):
     print_map = np.array(['-', '|', '-', '|'])
     string_grid = print_map[np.argmax(grid, axis=-1)]
+    string_grid[(grid[:, :, DOWN] & grid[:, :, RIGHT]) == 1] = '/'
+    string_grid[(grid[:, :, UP] & grid[:, :, LEFT]) == 1] = '/'
+
+    string_grid[(grid[:, :, DOWN] & grid[:, :, LEFT]) == 1] = '\\'
+    string_grid[(grid[:, :, UP] & grid[:, :, RIGHT]) == 1] = '\\'
+
+    string_grid[grid.sum(axis=-1) == 4] = '+'
+
     string_grid[grid.sum(axis=-1) == 0] = ' '
     [print(''.join(i)) for i in string_grid]
     # todo: dodělat
