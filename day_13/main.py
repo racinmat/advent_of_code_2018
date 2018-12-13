@@ -34,7 +34,7 @@ def load_map():
                       (string_map[cart_locations_tuple] == '^') * UP + \
                       (string_map[cart_locations_tuple] == '<') * LEFT + \
                       (string_map[cart_locations_tuple] == 'v') * DOWN
-    cart_next_tiebreaks = np.ones_like(cart_directions) * -1    # first tiebreak is turning left
+    cart_next_tiebreaks = np.ones_like(cart_directions) * -1  # first tiebreak is turning left
 
     string_map[np.isin(string_map, ['<', '>'])] = '-'
     string_map[np.isin(string_map, ['^', 'v'])] = '|'
@@ -85,7 +85,8 @@ def print_grid(grid, cart_locations, cart_directions):
     print()
 
 
-def tick(grid, cart_locations, cart_directions, cart_next_tiebreaks, raise_on_crash=False):
+def tick(grid, cart_locations, cart_directions, cart_next_tiebreaks, remove_before_crash=False):
+    colliding_carts = []
     for i in np.lexsort(np.flip(cart_locations.T, 0)):  # annoying, but this creates correct ordering by coordinates
         cart_loc = cart_locations[i].copy()
         cart_loc_tupl = tuple(cart_loc)
@@ -108,10 +109,19 @@ def tick(grid, cart_locations, cart_directions, cart_next_tiebreaks, raise_on_cr
             cart_loc += MOVE[new_cart_dir]
             cart_next_tiebreaks[i] = NEXT_TIEBREAK[tiebreak]
             cart_dir = new_cart_dir
-        if cart_loc.tolist() in cart_locations.tolist() and raise_on_crash:
-            raise CollisionException(cart_loc)
+        if cart_loc.tolist() in cart_locations.tolist():
+            if remove_before_crash:
+                colliding_carts.append(i)
+                colliding_carts.append(cart_locations.tolist().index(cart_loc.tolist()))
+            else:
+                raise CollisionException(cart_loc)
         cart_locations[i] = cart_loc
         cart_directions[i] = cart_dir
+
+    cart_locations = np.delete(cart_locations, colliding_carts, axis=0)
+    cart_directions = np.delete(cart_directions, colliding_carts, axis=0)
+    cart_next_tiebreaks = np.delete(cart_next_tiebreaks, colliding_carts, axis=0)
+    return cart_locations, cart_directions, cart_next_tiebreaks
 
 
 def part_1():
@@ -119,22 +129,20 @@ def part_1():
     # print_grid(grid, cart_locations, cart_directions)
     try:
         while True:
-            tick(grid, cart_locations, cart_directions, cart_next_tiebreaks, raise_on_crash=True)
+            tick(grid, cart_locations, cart_directions, cart_next_tiebreaks, remove_before_crash=False)
             # print_grid(grid, cart_locations, cart_directions)
-    #         todo: add printing
     except CollisionException as e:
         print(np.flip(e.args[0], 0).tolist())
+
 
 def part_2():
     grid, cart_locations, cart_directions, cart_next_tiebreaks = load_map()
     # print_grid(grid, cart_locations, cart_directions)
-    try:
-        while True:
-            tick(grid, cart_locations, cart_directions, cart_next_tiebreaks, raise_on_crash=True)
-            # print_grid(grid, cart_locations, cart_directions)
-    #         todo: add printing
-    except CollisionException as e:
-        print(np.flip(e.args[0], 0).tolist())
+    while len(cart_directions) > 1:
+        cart_locations, cart_directions, cart_next_tiebreaks = tick(
+            grid, cart_locations, cart_directions, cart_next_tiebreaks, remove_before_crash=True)
+        # print_grid(grid, cart_locations, cart_directions)
+    print(np.flip(cart_locations[0], 0).tolist())
 
 
 if __name__ == '__main__':
