@@ -64,7 +64,7 @@ class CollisionException(RuntimeError):
     pass
 
 
-def print_grid(grid):
+def print_grid(grid, cart_locations, cart_directions):
     print_map = np.array(['-', '|', '-', '|'])
     string_grid = print_map[np.argmax(grid, axis=-1)]
     string_grid[(grid[:, :, DOWN] & grid[:, :, RIGHT]) == 1] = '/'
@@ -76,6 +76,10 @@ def print_grid(grid):
     string_grid[grid.sum(axis=-1) == 4] = '+'
 
     string_grid[grid.sum(axis=-1) == 0] = ' '
+
+    for i, ch in {LEFT: '<', RIGHT: '>', UP: '^', DOWN: 'v'}.items():
+        string_grid[np.split(cart_locations[cart_directions == i], [-1], axis=1)] = ch
+
     [print(''.join(i)) for i in string_grid]
     # todo: dodělat
     print()
@@ -102,11 +106,11 @@ def tick(grid, cart_locations, cart_directions, cart_next_tiebreaks):
 
 
 def part_1():
-    grid, car_locations, car_directions, cart_next_tiebreaks = load_map()
+    grid, cart_locations, cart_directions, cart_next_tiebreaks = load_map()
     try:
         while True:
-            tick(grid, car_locations, car_directions, cart_next_tiebreaks)
-            print_grid(grid)
+            tick(grid, cart_locations, cart_directions, cart_next_tiebreaks)
+            print_grid(grid, cart_locations, cart_directions)
     #         todo: add printing
     except CollisionException as e:
         print(e.message)
