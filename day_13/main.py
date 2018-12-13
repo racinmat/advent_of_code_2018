@@ -1,13 +1,24 @@
 import numpy as np
 
+LEFT = 0
+UP = 1
+RIGHT = 2
+DOWN = 3
+
 
 def load_map():
     lines_array = []
     with open('test_input.txt', encoding='utf-8') as lines:
         for line in lines:
             lines_array.append(list(line.replace('\n', '')))
-    map = np.array(lines_array)
-    return initial, rules
+    string_map = np.array(lines_array)
+    map = np.ones((string_map.shape[0], string_map.shape[1], 4)) * 0
+    map[string_map == '|', UP] = 1
+    map[string_map == '|', DOWN] = 1
+    map[string_map == '-', LEFT] = 1
+    map[string_map == '-', RIGHT] = 1
+
+    car_locations = np.where(string_map == '>') + np.where(string_map == '<') + np.where(stri == '^') + np.where(map == 'v')
 
 
 def calc_next_generation(plants, rules):
@@ -20,7 +31,7 @@ def calc_next_generation(plants, rules):
     plants_indices = np.where(new_gen_plants == 1)[0]
     plants_start = plants_indices.min()
     plants_end = plants_indices.max()
-    return new_gen_plants[plants_start: plants_end+1], plants_start - 4
+    return new_gen_plants[plants_start: plants_end + 1], plants_start - 4
 
 
 def part_1():
