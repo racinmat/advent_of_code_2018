@@ -7,9 +7,9 @@ DOWN = 3
 
 MOVE = {
     LEFT: [0, -1],
-    UP: [1, 0],
+    UP: [-1, 0],
     RIGHT: [0, 1],
-    DOWN: [-1, 0],
+    DOWN: [1, 0],
 }
 
 NEXT_TIEBREAK = {
@@ -29,12 +29,12 @@ def load_map():
 
     # defining cart things before grid so I can replace those by lines to easier parsing
     cart_locations_tuple = np.where(np.isin(string_map, ['>', '^', 'v', '<']))
-    cart_locations = np.array(cart_locations_tuple)
+    cart_locations = np.array(cart_locations_tuple).T
     cart_directions = (string_map[cart_locations_tuple] == '>') * RIGHT + \
                       (string_map[cart_locations_tuple] == '^') * UP + \
                       (string_map[cart_locations_tuple] == '<') * LEFT + \
                       (string_map[cart_locations_tuple] == 'v') * DOWN
-    cart_next_tiebreaks = np.zeros_like(cart_directions)
+    cart_next_tiebreaks = np.ones_like(cart_directions) * -1    # first tiebreak is turning left
 
     string_map[np.isin(string_map, ['<', '>'])] = '-'
     string_map[np.isin(string_map, ['^', 'v'])] = '|'
@@ -97,18 +97,28 @@ def tick(grid, cart_locations, cart_directions, cart_next_tiebreaks):
             if same_dir:
                 cart_loc += MOVE[cart_dir]
             else:
-                cart_loc += MOVE[np.argmax(map_pos[cart_dir - 1:cart_dir + 1])]
+                indices = np.indices(map_pos.shape)
+                available_dirs = (indices >= cart_dir - 1) & (indices <= cart_dir + 1) * map_pos
+                new_dir = np.argmax(map_pos & available_dirs)
+                cart_loc += MOVE[new_dir]
+                cart_dir = new_dir
         else:  # intersection
-            cart_loc += MOVE[cart_dir + tiebreak]
+            new_cart_dir = (cart_dir + tiebreak) % 4
+            cart_loc += MOVE[new_cart_dir]
             cart_next_tiebreaks[i] = NEXT_TIEBREAK[tiebreak]
+            cart_dir = new_cart_dir
         if cart_loc.tolist() in cart_locations.tolist():
             raise CollisionException(cart_loc)
+        cart_locations[i] = cart_loc
+        cart_directions[i] = cart_dir
 
 
 def part_1():
     grid, cart_locations, cart_directions, cart_next_tiebreaks = load_map()
+    print_grid(grid, cart_locations, cart_directions)
     try:
-        while True:
+        # while True:
+        for i in range(20):
             tick(grid, cart_locations, cart_directions, cart_next_tiebreaks)
             print_grid(grid, cart_locations, cart_directions)
     #         todo: add printing
