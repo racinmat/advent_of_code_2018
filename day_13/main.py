@@ -5,6 +5,19 @@ UP = 1
 RIGHT = 2
 DOWN = 3
 
+MOVE = {
+    LEFT: [0, -1],
+    UP: [1, 0],
+    RIGHT: [0, 1],
+    DOWN: [-1, 0],
+}
+
+NEXT_TIEBREAK = {
+    0: 1,
+    1: -1,
+    -1: 0,
+}
+
 
 def load_map():
     lines_array = []
@@ -12,40 +25,85 @@ def load_map():
         for line in lines:
             lines_array.append(list(line.replace('\n', '')))
     string_map = np.array(lines_array)
-    map = np.ones((string_map.shape[0], string_map.shape[1], 4)) * 0
-    map[string_map == '|', UP] = 1
-    map[string_map == '|', DOWN] = 1
-    map[string_map == '-', LEFT] = 1
-    map[string_map == '-', RIGHT] = 1
+    grid = np.ones(string_map.shape + (4,), dtype=np.int8) * 0
 
-    car_locations = np.where(string_map == '>') + np.where(string_map == '<') + np.where(stri == '^') + np.where(map == 'v')
+    grid[string_map == '|', UP] = 1
+    grid[string_map == '|', DOWN] = 1
+
+    grid[string_map == '-', LEFT] = 1
+    grid[string_map == '-', RIGHT] = 1
+
+    grid[string_map == '+', :] = 1
+
+    grid[(string_map == '/') & (np.roll(string_map, -1, axis=1) == '-'), RIGHT] = 1
+    grid[(string_map == '/') & (np.roll(string_map, -1, axis=0) == '|'), DOWN] = 1
+    grid[(string_map == '/') & (np.roll(string_map, 1, axis=1) == '-'), LEFT] = 1
+    grid[(string_map == '/') & (np.roll(string_map, 1, axis=0) == '|'), UP] = 1
+
+    grid[string_map == '<', LEFT] = 1
+    grid[string_map == '>', LEFT] = 1
+    grid[string_map == '<', RIGHT] = 1
+    grid[string_map == '>', RIGHT] = 1
+
+    grid[string_map == '^', UP] = 1
+    grid[string_map == 'v', UP] = 1
+    grid[string_map == '^', DOWN] = 1
+    grid[string_map == 'v', DOWN] = 1
+
+    # todo: doplnit ještě podle aut a podle \/
+
+    cart_locations_tuple = np.where(np.isin(string_map, ['>', '^', 'v', '<']))
+    cart_locations = np.array(cart_locations_tuple)
+    cart_directions = (string_map[cart_locations_tuple] == '>') * RIGHT + \
+                      (string_map[cart_locations_tuple] == '^') * UP + \
+                      (string_map[cart_locations_tuple] == '<') * LEFT + \
+                      (string_map[cart_locations_tuple] == 'v') * DOWN
+    cart_next_tiebreaks = np.zeros_like(cart_directions)
+    return grid, cart_locations, cart_directions, cart_next_tiebreaks
 
 
-def calc_next_generation(plants, rules):
-    plants = np.pad(plants, 4, 'constant', constant_values=0)
-    new_gen_plants = np.zeros_like(plants)
-    for i in range(2, len(plants) - 2):
-        part = tuple(plants[i - 2:i + 3])
-        if part in rules:
-            new_gen_plants[i] = rules[part]
-    plants_indices = np.where(new_gen_plants == 1)[0]
-    plants_start = plants_indices.min()
-    plants_end = plants_indices.max()
-    return new_gen_plants[plants_start: plants_end + 1], plants_start - 4
+class CollisionException(RuntimeError):
+    pass
+
+
+def print_grid(grid):
+    print_map = np.array(['-', '|', '-', '|'])
+    string_grid = print_map[np.argmax(grid, axis=-1)]
+    string_grid[grid.sum(axis=-1) == 0] = ' '
+    [print(''.join(i)) for i in string_grid]
+    # todo: dodělat
+    print()
+
+
+def tick(grid, cart_locations, cart_directions, cart_next_tiebreaks):
+    for i in np.lexsort(cart_locations):
+        cart_loc = cart_locations[i].copy()
+        cart_loc_tupl = tuple(cart_locations[i])
+        cart_dir = cart_directions[i]
+        tiebreak = cart_next_tiebreaks[i]
+        map_pos = grid[cart_loc_tupl]
+        if map_pos.sum() <= 2:  # continue
+            same_dir = grid[cart_loc_tupl + (cart_dir,)]
+            if same_dir:
+                cart_loc += MOVE[cart_dir]
+            else:
+                cart_loc += MOVE[np.argmax(map_pos[cart_dir - 1:cart_dir + 1])]
+        else:  # intersection
+            cart_loc += MOVE[cart_dir + tiebreak]
+            cart_next_tiebreaks[i] = NEXT_TIEBREAK[tiebreak]
+        if cart_loc.tolist() in cart_locations.tolist():
+            raise CollisionException(cart_loc)
 
 
 def part_1():
-    initial, rules = load_map()
-    plants = initial
-    # print(''.join(map(str, plants)))
-    total_offset = 0
-    for i in range(0, 1000):
-        plants, offset = calc_next_generation(plants, rules)
-        total_offset += offset
-        # print(''.join(map(str, plants)))
-    plants_indices = np.where(plants == 1)[0] + total_offset
-    total_sum = np.sum(plants_indices)
-    print(total_sum)
+    grid, car_locations, car_directions, cart_next_tiebreaks = load_map()
+    try:
+        while True:
+            tick(grid, car_locations, car_directions, cart_next_tiebreaks)
+            print_grid(grid)
+    #         todo: add printing
+    except CollisionException as e:
+        print(e.message)
 
 
 def part_2():
