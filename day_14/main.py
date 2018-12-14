@@ -24,15 +24,17 @@ def part_2():
     board = [3, 7]
     idx_0 = 0
     idx_1 = 1
-    # while board[-len(sequence):] != sequence:
-    for i in range(4000000):
+    while board[-len(sequence):] != sequence and board[-len(sequence) - 1:-1] != sequence:
         mix = board[idx_0] + board[idx_1]
         mix_results = [int(d) for d in str(mix)]
         board.extend(mix_results)
         idx_0 = (idx_0 + board[idx_0] + 1) % len(board)
         idx_1 = (idx_1 + board[idx_1] + 1) % len(board)
         # print(board)
-    print(len(board) - len(sequence))
+    if board[-len(sequence):] == sequence:
+        print(len(board) - len(sequence))
+    else:
+        print(len(board) - len(sequence) - 1)
 
 
 if __name__ == '__main__':
