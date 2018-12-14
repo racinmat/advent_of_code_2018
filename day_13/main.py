@@ -154,7 +154,3 @@ if __name__ == '__main__':
     part_2()
 
     print(time() - start)
-
-'''
-In this example, the location of the first crash is 7,3.
-'''
