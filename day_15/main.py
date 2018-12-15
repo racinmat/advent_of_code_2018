@@ -141,6 +141,9 @@ def find_first_step_in_path_to_nearest_target(grid, begin, targets):
             path_found = True
 
     nearest_targets = targets[targets_in_neighbours]
+    if len(nearest_targets) == 0:
+        return None
+
     nearest_target = nearest_targets[np.lexsort(np.flip(nearest_targets.T, 0))[0]]
 
     curr_nodes = [tuple(nearest_target)]
