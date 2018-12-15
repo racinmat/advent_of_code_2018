@@ -111,21 +111,48 @@ def find_first_step_in_path_to_nearest_target(grid, begin, targets):
     distances[tuple(begin)] = 0
     open_nodes = [begin]
     path_found = False
+    targets_in_neighbours = []
+    predecessors = dict()
     while not path_found and open_nodes:
-        curr = open_nodes.pop(0)
-        neighbours = get_free_neighbours(grid, curr)
-        neighbours_to_update = neighbours[np.where(distances[tuple(neighbours.T)] > distances[tuple(curr)] + 1)]
-        distances[tuple(neighbours_to_update.T)] = distances[tuple(curr)] + 1
-        open_nodes.extend(neighbours_to_update)
-        targets_in_neighbours = [i in neighbours.tolist() for i in targets.tolist()]
+        # curr = open_nodes.pop(0)
+        # neighbours = get_free_neighbours(grid, curr)
+        # neighbours_to_update = neighbours[np.where(distances[tuple(neighbours.T)] > distances[tuple(curr)] + 1)]
+        # distances[tuple(neighbours_to_update.T)] = distances[tuple(curr)] + 1
+        # open_nodes.extend(neighbours_to_update)
+        # targets_in_neighbours = [i in neighbours.tolist() for i in targets.tolist()]
+        # if np.any(targets_in_neighbours):
+        #     path_found = True
+
+        updated_neighbours = []
+        for node in open_nodes:
+            neighbours = get_free_neighbours(grid, node)
+            neighbours_to_update = neighbours[np.where(distances[tuple(neighbours.T)] >= distances[tuple(node)] + 1)]
+            updated_neighbours += list([i.tolist() for i in neighbours_to_update])
+            for n in neighbours_to_update:
+                n = tuple(n)
+                if n not in predecessors:
+                    predecessors[n] = []
+                predecessors[n].append(tuple(node))
+            distances[tuple(neighbours_to_update.T)] = distances[tuple(node)] + 1
+
+        open_nodes = updated_neighbours
+        targets_in_neighbours = [i in updated_neighbours for i in targets.tolist()]
         if np.any(targets_in_neighbours):
             path_found = True
 
-    # can have multiple nearest points, find lexically first
-    first_steps = np.where(distances == 1)  # todo: use only distances==1 contained in path
-    first_steps = np.array(first_steps).T
-    first_step = np.lexsort(np.flip(first_steps.T, 0))[0]    # tiebreak
-    return first_steps[first_step]
+    nearest_targets = targets[targets_in_neighbours]
+    nearest_target = nearest_targets[np.lexsort(np.flip(nearest_targets.T, 0))[0]]
+
+    curr_nodes = [tuple(nearest_target)]
+    while True:
+        previous_nodes = [j for i in curr_nodes for j in predecessors[i]]
+        if tuple(begin) in previous_nodes:
+            break
+        curr_nodes = previous_nodes
+    next_step_nodes = curr_nodes
+
+    next_step_node = np.array(next_step_nodes[np.lexsort(np.flip(np.array(next_step_nodes).T, 0))[0]])
+    return next_step_node
 
 
 def find_first_step_in_path_to_nearest_target_dijkstra(grid, begin, targets):
