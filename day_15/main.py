@@ -174,7 +174,7 @@ def tick(grid, unit_locations, unit_types, unit_hps, unit_attacks):
         enemy_locations = unit_locations[(unit_types == get_enemy_type(unit_type)) & (unit_hps > 0)]
 
         if len(enemy_locations) == 0:
-            return unit_locations, unit_types, unit_hps, unit_attacks, True
+            return unit_locations, unit_types, unit_hps, unit_attacks, True, False
 
         enemy_dists = dist(unit_loc, enemy_locations)
         # moving part, check that no enemy is in neighbourhood and then paths
@@ -191,23 +191,23 @@ def tick(grid, unit_locations, unit_types, unit_hps, unit_attacks):
 
             unit_locations[i] = unit_loc
 
-        enemy_dists = dist(unit_loc, enemy_locations)   # recalculate after movement
+        enemy_dists = dist(unit_loc, enemy_locations)  # recalculate after movement
         # attacking part
         if min(enemy_dists) == 1:
             adjacent_enemies = get_type_neighbours(unit_loc, get_enemy_type(unit_type), unit_locations, unit_types)
             adjacent_enemy_indices = [i in adjacent_enemies.tolist() for i in unit_locations.tolist()]
-            min_adjacent_enemy_health_indices = adjacent_enemy_indices & (
-                        unit_hps == unit_hps[adjacent_enemy_indices].min())
+            min_living_hp = unit_hps[adjacent_enemy_indices & (unit_hps > 0)].min()
+            min_adjacent_enemy_health_indices = adjacent_enemy_indices & (unit_hps == min_living_hp)
             enemies_to_attack = unit_locations[min_adjacent_enemy_health_indices]
             enemy_to_attack, index = first_in_reading_order(enemies_to_attack)
             enemy_to_attack_index = np.where(min_adjacent_enemy_health_indices)[0][index]
 
             unit_hps[enemy_to_attack_index] -= unit_attacks[i]
             if unit_hps[enemy_to_attack_index] <= 0:
-                grid[tuple(enemy_to_attack)] = FREE    # setting dead unit position to be free
+                grid[tuple(enemy_to_attack)] = FREE  # setting dead unit position to be free
 
     someone_won = unit_hps[unit_types == GOBLIN].max() <= 0 or unit_hps[unit_types == ELF].max() <= 0
-    return unit_locations, unit_types, unit_hps, unit_attacks, someone_won
+    return unit_locations, unit_types, unit_hps, unit_attacks, someone_won, True
 
 
 def part_1():
@@ -218,13 +218,15 @@ def part_1():
     someone_wins = False
     num_rounds = 0
     while not someone_wins:
-        unit_locations, units_types, unit_hps, unit_attacks, someone_wins = tick(grid, unit_locations, units_types,
-                                                                                 unit_hps, unit_attacks)
-        num_rounds += 1
+        unit_locations, units_types, unit_hps, unit_attacks, someone_wins, full_turn = tick(
+            grid, unit_locations, units_types, unit_hps, unit_attacks)
+        if full_turn:
+            num_rounds += 1
         print('round ', num_rounds)
         print_grid(grid, unit_locations, units_types, unit_hps)
 
     print(num_rounds)
+    print(unit_hps[unit_hps > 0].sum())
     print(unit_hps[unit_hps > 0].sum() * num_rounds)
 
 
