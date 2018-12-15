@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.sparse import csgraph
 
 OCCUPIED = 0
 FREE = 1
@@ -10,7 +9,7 @@ GOBLIN = 1
 
 def load_map():
     lines_array = []
-    with open('test_input.txt', encoding='utf-8') as lines:
+    with open('input.txt', encoding='utf-8') as lines:
         for line in lines:
             lines_array.append(list(line.replace('\n', '')))
     string_map = np.array(lines_array)
@@ -112,36 +111,27 @@ def first_in_reading_order(arr):
 
 
 def find_first_step_in_path_to_nearest_target(grid, begin, targets):
-    distances = np.ones_like(grid) * np.inf
+    distances = np.ones_like(grid, np.int32) * 20000    # should be big enough to behave like infinity
     distances[tuple(begin)] = 0
     open_nodes = [begin]
     path_found = False
     targets_in_neighbours = []
     predecessors = dict()
     while not path_found and open_nodes:
-        # curr = open_nodes.pop(0)
-        # neighbours = get_free_neighbours(grid, curr)
-        # neighbours_to_update = neighbours[np.where(distances[tuple(neighbours.T)] > distances[tuple(curr)] + 1)]
-        # distances[tuple(neighbours_to_update.T)] = distances[tuple(curr)] + 1
-        # open_nodes.extend(neighbours_to_update)
-        # targets_in_neighbours = [i in neighbours.tolist() for i in targets.tolist()]
-        # if np.any(targets_in_neighbours):
-        #     path_found = True
-
-        updated_neighbours = []
+        updated_neighbours = set()
         for node in open_nodes:
             neighbours = get_free_neighbours(grid, node)
             neighbours_to_update = neighbours[np.where(distances[tuple(neighbours.T)] >= distances[tuple(node)] + 1)]
-            updated_neighbours += list([i.tolist() for i in neighbours_to_update])
+            updated_neighbours = updated_neighbours.union(set([tuple(i.tolist()) for i in neighbours_to_update]))
             for n in neighbours_to_update:
                 n = tuple(n)
                 if n not in predecessors:
-                    predecessors[n] = []
-                predecessors[n].append(tuple(node))
+                    predecessors[n] = set()
+                predecessors[n].add(tuple(node))
             distances[tuple(neighbours_to_update.T)] = distances[tuple(node)] + 1
 
         open_nodes = updated_neighbours
-        targets_in_neighbours = [i in updated_neighbours for i in targets.tolist()]
+        targets_in_neighbours = [tuple(i) in updated_neighbours for i in targets.tolist()]
         if np.any(targets_in_neighbours):
             path_found = True
 
@@ -182,7 +172,6 @@ def tick(grid, unit_locations, unit_types, unit_hps, unit_attacks):
             # moving and thus pathfinding is needed
             enemy_neighbours = get_locations_free_neighbours(grid, enemy_locations)  # neighbouring nodes of enemies
             step = find_first_step_in_path_to_nearest_target(grid, unit_loc, enemy_neighbours)
-            # todo: check case when no path is feasible and no enemy is reachable
             # is path is None, no feasible path was found
             if step is not None:
                 grid[tuple(unit_loc)] = FREE
@@ -214,7 +203,7 @@ def part_1():
     grid, unit_locations, units_types = load_map()
     unit_hps = np.ones_like(units_types) * 200
     unit_attacks = np.ones_like(units_types) * 3
-    print_grid(grid, unit_locations, units_types, unit_hps)
+    # print_grid(grid, unit_locations, units_types, unit_hps)
     someone_wins = False
     num_rounds = 0
     while not someone_wins:
@@ -223,10 +212,10 @@ def part_1():
         if full_turn:
             num_rounds += 1
         print('round ', num_rounds)
-        print_grid(grid, unit_locations, units_types, unit_hps)
+        # print_grid(grid, unit_locations, units_types, unit_hps)
 
-    print(num_rounds)
-    print(unit_hps[unit_hps > 0].sum())
+    # print(num_rounds)
+    # print(unit_hps[unit_hps > 0].sum())
     print(unit_hps[unit_hps > 0].sum() * num_rounds)
 
 
