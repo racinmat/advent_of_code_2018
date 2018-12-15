@@ -36,7 +36,7 @@ def print_grid(grid, unit_locations, units_types, unit_hps):
     string_grid[np.split(goblin_locations, [-1], axis=1)] = 'G'
 
     [print(''.join(i)) for i in string_grid]
-    [print('E' if units_types[i] == ELF else 'G', unit_locations[i], unit_hps[i]) for i in range(len(units_types))]
+    [print('E' if units_types[i] == ELF else 'G', unit_locations[i], unit_hps[i]) for i in range(len(units_types)) if unit_hps[i] > 0]
     print()
 
 
@@ -121,7 +121,9 @@ def find_first_step_in_path_to_nearest_target(grid, begin, targets):
         updated_neighbours = set()
         for node in open_nodes:
             neighbours = get_free_neighbours(grid, node)
+            # changing this line gives different results, tiebreaking in dijkstra looks broken, fix it
             neighbours_to_update = neighbours[np.where(distances[tuple(neighbours.T)] >= distances[tuple(node)] + 1)]
+            # neighbours_to_update = neighbours[np.where(distances[tuple(neighbours.T)] > distances[tuple(node)] + 1)]
             updated_neighbours = updated_neighbours.union(set([tuple(i.tolist()) for i in neighbours_to_update]))
             for n in neighbours_to_update:
                 n = tuple(n)
@@ -135,21 +137,22 @@ def find_first_step_in_path_to_nearest_target(grid, begin, targets):
         if np.any(targets_in_neighbours):
             path_found = True
 
+    # todo: everyone has only one preceeder, thus tiebreaking does not for, fix it!
     nearest_targets = targets[targets_in_neighbours]
     if len(nearest_targets) == 0:
         return None
 
     nearest_target, _ = first_in_reading_order(nearest_targets)
 
-    curr_nodes = [tuple(nearest_target)]
+    curr_nodes = {tuple(nearest_target)}
     while True:
-        previous_nodes = [j for i in curr_nodes for j in predecessors[i]]
+        previous_nodes = set([j for i in curr_nodes for j in predecessors[i]])
         if tuple(begin) in previous_nodes:
             break
         curr_nodes = previous_nodes
     next_step_nodes = curr_nodes
 
-    next_step_node, _ = first_in_reading_order(np.array(next_step_nodes))
+    next_step_node, _ = first_in_reading_order(np.array(list(next_step_nodes)))
     return next_step_node
 
 
@@ -232,3 +235,41 @@ if __name__ == '__main__':
     part_2()
 
     print(time() - start)
+# 224679 too low
+# 227148 too low
+# 235323 too high
+
+'''
+################################    ################################   
+###############.##...###########    ###############.##...###########   
+##############..#.....#..#######    ##############..#.....#..#######   
+##############......G......#####    ##############.............#####   
+###############................#    ###############.....G..........#   
+##########.........G#...G......#    ##########..........#..........#   
+##########................##..##    ##########.........G....G.##..##   
+######...##...G...G......####..#    ######...##........G.....####.E#   
+####...G.#.G..............####E#    ####....G#..G.G...........####.#   
+#######.......G.........G#####.#    #######........G........G#####.#   
+#######...........G.....E.######    #######............G...GE.######   
+########...G.......E...G..######    ########....G......E......######   
+######..G..G..#####.........####    ######...G..G.#####.........####   
+######......G#######........####    ######.....G.#######....E...####   
+###.........#########...E..E..##    ###.........#########.....E...##   
+###..#..#...#########.........##    ###..#..#...#########.........##   
+######......#########.......####    ######......#########.......####   
+#####.......#########.....######    #####.......#########.....######   
+#####.G.G...#########.....######    #####.GG....#########.....######   
+#...#.G..G...#######......######    #...#...G.G..#######...E..######   
+###...##......#####....E..######    ###...##......#####.......######   
+####..##...G......E.......######    ####..##....G....E........######   
+#####.####.....######...########    #####.####.....######..E########   
+###########..#...####..E..######    ###########..#...####.....######   
+###############...####..#...####    ###############...####..#...####   
+###############...###..E#.E.####    ###############...###.E.#E..####   
+#####################.#.....####    #####################.#.....####   
+#####################.#...######    #####################.#...######   
+###################...##.#######    ###################...##.#######   
+##################..############    ##################..############   
+##################...###########    ##################...###########   
+################################    ################################   
+'''
