@@ -29,14 +29,15 @@ def load_map():
     return grid, unit_locations, units_types
 
 
-def print_grid(grid, unit_locations, units_types):
+def print_grid(grid, unit_locations, units_types, unit_hps):
     string_grid = np.where(grid == FREE, '.', '#')
-    elf_locations = unit_locations[units_types == ELF]
-    goblin_locations = unit_locations[units_types == GOBLIN]
+    elf_locations = unit_locations[(units_types == ELF) & (unit_hps > 0)]
+    goblin_locations = unit_locations[(units_types == GOBLIN) & (unit_hps > 0)]
     string_grid[np.split(elf_locations, [-1], axis=1)] = 'E'
     string_grid[np.split(goblin_locations, [-1], axis=1)] = 'G'
 
     [print(''.join(i)) for i in string_grid]
+    [print('E' if units_types[i] == ELF else 'G', unit_locations[i], unit_hps[i]) for i in range(len(units_types))]
     print()
 
 
@@ -45,18 +46,17 @@ def get_enemy_type(unit_type):
 
 
 def get_free_neighbours(grid, loc):
-    neighbours = np.array([
-        [-1, 0],
-        [1, 0],
-        [0, -1],
-        [0, 1],
-    ], dtype=np.int8)
-    neighbours += loc
+    neighbours = get_all_neighbours(loc)
     neighbours_tuple = neighbours.T[0], neighbours.T[1]
     return neighbours[grid[neighbours_tuple] == FREE]
 
 
-def get_all_neighbours(grid, loc):
+def get_type_neighbours(loc, type, unit_locations, unit_types):
+    neighbours = get_all_neighbours(loc)
+    return np.array([n for n in neighbours if n.tolist() in unit_locations[unit_types == type].tolist()])
+
+
+def get_all_neighbours(loc):
     neighbours = np.array([
         [-1, 0],
         [1, 0],
@@ -78,7 +78,7 @@ def grid_to_adj_matrix(grid):
     free_nodes = np.asarray(np.where(grid == FREE))
     free_node_indices = np.ravel_multi_index(free_nodes, grid.shape)
     for free_node, free_index in zip(free_nodes.T, free_node_indices):
-        neighbours = get_all_neighbours(grid, free_node)
+        neighbours = get_all_neighbours(free_node)
         neighbour_indices = np.ravel_multi_index(neighbours.T, grid.shape)
 
         adj_matrix[neighbour_indices, [free_index]] = 1
@@ -104,6 +104,11 @@ def get_path_from_predecessors(predecessors_matrix, target):
         path.append(curr)
     path.reverse()
     return path
+
+
+def first_in_reading_order(arr):
+    index = np.lexsort(np.flip(arr.T, 0))[0]
+    return arr[index], index
 
 
 def find_first_step_in_path_to_nearest_target(grid, begin, targets):
@@ -144,7 +149,7 @@ def find_first_step_in_path_to_nearest_target(grid, begin, targets):
     if len(nearest_targets) == 0:
         return None
 
-    nearest_target = nearest_targets[np.lexsort(np.flip(nearest_targets.T, 0))[0]]
+    nearest_target, _ = first_in_reading_order(nearest_targets)
 
     curr_nodes = [tuple(nearest_target)]
     while True:
@@ -154,39 +159,23 @@ def find_first_step_in_path_to_nearest_target(grid, begin, targets):
         curr_nodes = previous_nodes
     next_step_nodes = curr_nodes
 
-    next_step_node = np.array(next_step_nodes[np.lexsort(np.flip(np.array(next_step_nodes).T, 0))[0]])
+    next_step_node, _ = first_in_reading_order(np.array(next_step_nodes))
     return next_step_node
 
 
-def find_first_step_in_path_to_nearest_target_dijkstra(grid, begin, targets):
-    grid_clear_begin = grid.copy()  # set begin as free node so I can build paths from and to it
-    grid_clear_begin[tuple(begin)] = FREE
-    adj_matrix = grid_to_adj_matrix(grid_clear_begin)
-    grid_csgraph = csgraph.csgraph_from_dense(adj_matrix, null_value=0)
-
-    target_indices = np.ravel_multi_index(targets.T, grid.shape)
-    begin_index = np.ravel_multi_index(begin.T, grid.shape)
-
-    dist_matrix, predecessors = csgraph.dijkstra(grid_csgraph, directed=False, indices=begin_index,
-                                                 return_predecessors=True)
-    target_indices.sort()  # solving tiebreaks by sorting targets so argmin returns correct one
-    targets_dists = dist_matrix[target_indices]
-    nearest_target = target_indices[np.argmin(targets_dists)]
-
-    paths_indices = get_path_from_predecessors(predecessors, nearest_target)
-    path = np.asarray(np.unravel_index(paths_indices, grid.shape)).T
-    if path[0].tolist() != begin.tolist():
-        return None
-    return path
-
-
-def tick(grid, unit_locations, units_types):
+def tick(grid, unit_locations, unit_types, unit_hps, unit_attacks):
     for i in np.lexsort(np.flip(unit_locations.T, 0)):  # annoying, but this creates correct ordering by coordinates
-        unit_loc = unit_locations[i].copy()
-        unit_type = units_types[i]
-        # unit_loc_tupl = tuple(unit_loc)
+        if unit_hps[i] <= 0:
+            continue
 
-        enemy_locations = unit_locations[units_types == get_enemy_type(unit_type)]
+        unit_loc = unit_locations[i].copy()
+        unit_type = unit_types[i]
+
+        enemy_locations = unit_locations[(unit_types == get_enemy_type(unit_type)) & (unit_hps > 0)]
+
+        if len(enemy_locations) == 0:
+            return unit_locations, unit_types, unit_hps, unit_attacks, True
+
         enemy_dists = dist(unit_loc, enemy_locations)
         # moving part, check that no enemy is in neighbourhood and then paths
         if min(enemy_dists) > 1:
@@ -199,23 +188,44 @@ def tick(grid, unit_locations, units_types):
                 grid[tuple(unit_loc)] = FREE
                 unit_loc = step
                 grid[tuple(unit_loc)] = OCCUPIED
+
+            unit_locations[i] = unit_loc
+
+        enemy_dists = dist(unit_loc, enemy_locations)   # recalculate after movement
         # attacking part
         if min(enemy_dists) == 1:
-            # todo: implement
-            pass
-        unit_locations[i] = unit_loc
+            adjacent_enemies = get_type_neighbours(unit_loc, get_enemy_type(unit_type), unit_locations, unit_types)
+            adjacent_enemy_indices = [i in adjacent_enemies.tolist() for i in unit_locations.tolist()]
+            min_adjacent_enemy_health_indices = adjacent_enemy_indices & (
+                        unit_hps == unit_hps[adjacent_enemy_indices].min())
+            enemies_to_attack = unit_locations[min_adjacent_enemy_health_indices]
+            enemy_to_attack, index = first_in_reading_order(enemies_to_attack)
+            enemy_to_attack_index = np.where(min_adjacent_enemy_health_indices)[0][index]
 
-    return unit_locations, units_types, False
+            unit_hps[enemy_to_attack_index] -= unit_attacks[i]
+            if unit_hps[enemy_to_attack_index] <= 0:
+                grid[tuple(enemy_to_attack)] = FREE    # setting dead unit position to be free
+
+    someone_won = unit_hps[unit_types == GOBLIN].max() <= 0 or unit_hps[unit_types == ELF].max() <= 0
+    return unit_locations, unit_types, unit_hps, unit_attacks, someone_won
 
 
 def part_1():
     grid, unit_locations, units_types = load_map()
-    print_grid(grid, unit_locations, units_types)
+    unit_hps = np.ones_like(units_types) * 200
+    unit_attacks = np.ones_like(units_types) * 3
+    print_grid(grid, unit_locations, units_types, unit_hps)
     someone_wins = False
-    # while not someone_wins:
-    for i in range(5):
-        unit_locations, units_types, someone_wins = tick(grid, unit_locations, units_types)
-        print_grid(grid, unit_locations, units_types)
+    num_rounds = 0
+    while not someone_wins:
+        unit_locations, units_types, unit_hps, unit_attacks, someone_wins = tick(grid, unit_locations, units_types,
+                                                                                 unit_hps, unit_attacks)
+        num_rounds += 1
+        print('round ', num_rounds)
+        print_grid(grid, unit_locations, units_types, unit_hps)
+
+    print(num_rounds)
+    print(unit_hps[unit_hps > 0].sum() * num_rounds)
 
 
 def part_2():
