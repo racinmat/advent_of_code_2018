@@ -9,14 +9,18 @@ def part_1():
     idx_0 = 0
     idx_1 = 1
     for i in range(num_recipes + 10):
-        mix = board[idx_0] + board[idx_1]
-        mix_results = [int(d) for d in str(mix)]
-        # board += mix_results
-        board.extend(mix_results)
-        idx_0 = (idx_0 + board[idx_0] + 1) % len(board)
-        idx_1 = (idx_1 + board[idx_1] + 1) % len(board)
+        idx_0, idx_1 = do_mutation(board, idx_0, idx_1)
         # print(board)
     print(''.join([str(i) for i in board[num_recipes:num_recipes + 10]]))
+
+
+def do_mutation(board, idx_0, idx_1):
+    mix = board[idx_0] + board[idx_1]
+    mix_results = [int(d) for d in str(mix)]
+    board += mix_results
+    idx_0 = (idx_0 + board[idx_0] + 1) % len(board)
+    idx_1 = (idx_1 + board[idx_1] + 1) % len(board)
+    return idx_0, idx_1
 
 
 def part_2():
@@ -25,11 +29,7 @@ def part_2():
     idx_0 = 0
     idx_1 = 1
     while board[-len(sequence):] != sequence and board[-len(sequence) - 1:-1] != sequence:
-        mix = board[idx_0] + board[idx_1]
-        mix_results = [int(d) for d in str(mix)]
-        board.extend(mix_results)
-        idx_0 = (idx_0 + board[idx_0] + 1) % len(board)
-        idx_1 = (idx_1 + board[idx_1] + 1) % len(board)
+        idx_0, idx_1 = do_mutation(board, idx_0, idx_1)
         # print(board)
     if board[-len(sequence):] == sequence:
         print(len(board) - len(sequence))
