@@ -202,7 +202,7 @@ def tick(grid, unit_locations, unit_types, unit_hps, unit_attacks):
 def evaluate_map(grid, unit_locations, units_types):
     unit_hps = np.ones_like(units_types) * 200
     unit_attacks = np.ones_like(units_types) * 3
-    # print_grid(grid, unit_locations, units_types, unit_hps)
+    print_grid(grid, unit_locations, units_types, unit_hps)
     someone_wins = False
     num_rounds = 0
     while not someone_wins:
@@ -210,8 +210,8 @@ def evaluate_map(grid, unit_locations, units_types):
             grid, unit_locations, units_types, unit_hps, unit_attacks)
         if full_turn:
             num_rounds += 1
-        # print('round ', num_rounds)
-        # print_grid(grid, unit_locations, units_types, unit_hps)
+        print('round ', num_rounds)
+        print_grid(grid, unit_locations, units_types, unit_hps)
 
     # print(num_rounds)
     # print(unit_hps[unit_hps > 0].sum())
@@ -220,7 +220,7 @@ def evaluate_map(grid, unit_locations, units_types):
 
 def part_1():
     lines_array = []
-    with open('test_input.txt', encoding='utf-8') as lines:
+    with open('input.txt', encoding='utf-8') as lines:
         for line in lines:
             lines_array.append(list(line.replace('\n', '')))
 
@@ -237,67 +237,67 @@ def parse_input_string(string):
 
 
 if __name__ == '__main__':
-    assert evaluate_map(*parse_map(parse_input_string('''
-#######
-#.G...#
-#...EG#
-#.#.#G#
-#..G#E#
-#.....#
-#######
-'''))) == 27730
-
-    assert evaluate_map(*parse_map(parse_input_string('''
-#######
-#G..#E#
-#E#E.E#
-#G.##.#
-#...#E#
-#...E.#
-#######
-'''))) == 36334
-
-    assert evaluate_map(*parse_map(parse_input_string('''
-#######
-#E..EG#
-#.#G.E#
-#E.##E#
-#G..#.#
-#..E#.#
-#######
-'''))) == 39514
-
-    assert evaluate_map(*parse_map(parse_input_string('''
-#######
-#E.G#.#
-#.#G..#
-#G.#.G#
-#G..#.#
-#...E.#
-#######
-'''))) == 27755
-
-    assert evaluate_map(*parse_map(parse_input_string('''
-#######
-#.E...#
-#.#..G#
-#.###.#
-#E#G#G#
-#...#G#
-#######
-'''))) == 28944
-
-    assert evaluate_map(*parse_map(parse_input_string('''
-#########
-#G......#
-#.E.#...#
-#..##..G#
-#...##..#
-#...#...#
-#.G...G.#
-#.....G.#
-#########
-'''))) == 18740
+#     assert evaluate_map(*parse_map(parse_input_string('''
+# #######
+# #.G...#
+# #...EG#
+# #.#.#G#
+# #..G#E#
+# #.....#
+# #######
+# '''))) == 27730
+#
+#     assert evaluate_map(*parse_map(parse_input_string('''
+# #######
+# #G..#E#
+# #E#E.E#
+# #G.##.#
+# #...#E#
+# #...E.#
+# #######
+# '''))) == 36334
+#
+#     assert evaluate_map(*parse_map(parse_input_string('''
+# #######
+# #E..EG#
+# #.#G.E#
+# #E.##E#
+# #G..#.#
+# #..E#.#
+# #######
+# '''))) == 39514
+#
+#     assert evaluate_map(*parse_map(parse_input_string('''
+# #######
+# #E.G#.#
+# #.#G..#
+# #G.#.G#
+# #G..#.#
+# #...E.#
+# #######
+# '''))) == 27755
+#
+#     assert evaluate_map(*parse_map(parse_input_string('''
+# #######
+# #.E...#
+# #.#..G#
+# #.###.#
+# #E#G#G#
+# #...#G#
+# #######
+# '''))) == 28944
+#
+#     assert evaluate_map(*parse_map(parse_input_string('''
+# #########
+# #G......#
+# #.E.#...#
+# #..##..G#
+# #...##..#
+# #...#...#
+# #.G...G.#
+# #.....G.#
+# #########
+# '''))) == 18740
 
     from time import time
 
