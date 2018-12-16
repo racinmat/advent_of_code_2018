@@ -202,9 +202,10 @@ def tick(grid, unit_locations, unit_types, unit_hps, unit_attacks):
     return unit_locations, unit_types, unit_hps, unit_attacks, someone_won, True
 
 
-def evaluate_map(grid, unit_locations, units_types):
+def evaluate_map(grid, unit_locations, units_types, elf_power=3):
     unit_hps = np.ones_like(units_types) * 200
     unit_attacks = np.ones_like(units_types) * 3
+    unit_attacks[units_types == ELF] = elf_power
     # print_grid(grid, unit_locations, units_types, unit_hps)
     someone_wins = False
     num_rounds = 0
@@ -218,7 +219,7 @@ def evaluate_map(grid, unit_locations, units_types):
 
     # print(num_rounds)
     # print(unit_hps[unit_hps > 0].sum())
-    return unit_hps[unit_hps > 0].sum() * num_rounds
+    return unit_hps[unit_hps > 0].sum() * num_rounds, unit_hps
 
 
 def part_1():
@@ -228,11 +229,23 @@ def part_1():
             lines_array.append(list(line.replace('\n', '')))
 
     grid, unit_locations, units_types = parse_map(lines_array)
-    print(evaluate_map(grid, unit_locations, units_types))
+    print(evaluate_map(grid, unit_locations, units_types)[0])
 
 
 def part_2():
-    pass
+    lines_array = []
+    with open('input.txt', encoding='utf-8') as lines:
+        for line in lines:
+            lines_array.append(list(line.replace('\n', '')))
+
+    grid, unit_locations, units_types = parse_map(lines_array)
+    elves_won = False
+    elf_power = 3
+    while not elves_won:
+        score, outcome_hps = evaluate_map(grid.copy(), unit_locations.copy(), units_types.copy(), elf_power=elf_power)
+        elves_won = np.all(outcome_hps[units_types == ELF] > 0)
+        print('elves power is now ', elf_power, 'their resulting hps were: ', outcome_hps[units_types == ELF], 'outcome is: ', score)
+        elf_power += 1
 
 
 def parse_input_string(string):
