@@ -164,16 +164,22 @@ def prepare_data():
     return change_logs, instructions, program
 
 
+def get_valid_instructions(change_log, instructions):
+    before = change_log['before']
+    instruction = change_log['instruction']
+    instr_num = instruction[0]
+    params = instruction[1:]
+    after = change_log['after']
+    valid_instructions = [instruction for instruction, fun in instructions.items() if fun(params, before) == after]
+    return valid_instructions, instr_num
+
+
 def part_1():
     change_logs, instructions, _ = prepare_data()
 
     num_at_least_three_opcodes = 0
     for change_log in change_logs:
-        before = change_log['before']
-        instruction = change_log['instruction']
-        params = instruction[1:]
-        after = change_log['after']
-        valid_instructions = [instruction for instruction, fun in instructions.items() if fun(params, before) == after]
+        valid_instructions, _ = get_valid_instructions(change_log, instructions)
         if len(valid_instructions) >= 3:
             num_at_least_three_opcodes += 1
 
@@ -186,12 +192,7 @@ def part_2():
     possible_mappings = [set(instructions.keys()) for i in range(16)]
 
     for change_log in change_logs:
-        before = change_log['before']
-        instruction = change_log['instruction']
-        instr_num = instruction[0]
-        params = instruction[1:]
-        after = change_log['after']
-        valid_instructions = [instruction for instruction, fun in instructions.items() if fun(params, before) == after]
+        valid_instructions, instr_num = get_valid_instructions(change_log, instructions)
         possible_mappings[instr_num].intersection_update(set(valid_instructions))
 
     print(possible_mappings)
