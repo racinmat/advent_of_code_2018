@@ -32,7 +32,8 @@ def print_grid(grid, unit_locations, units_types, unit_hps):
     string_grid[np.split(goblin_locations, [-1], axis=1)] = 'G'
 
     [print(''.join(i)) for i in string_grid]
-    [print('E' if units_types[i] == ELF else 'G', unit_locations[i], unit_hps[i]) for i in range(len(units_types)) if
+    [print('E' if units_types[i] == ELF else 'G', unit_locations[i], unit_hps[i]) for i in
+     np.lexsort(np.flip(unit_locations.T, 0)) if
      unit_hps[i] > 0]
     print()
 
@@ -47,9 +48,11 @@ def get_free_neighbours(grid, loc):
     return neighbours[grid[neighbours_tuple] == FREE]
 
 
-def get_type_neighbours(loc, type, unit_locations, unit_types):
+def get_type_neighbours(loc, unit_type, unit_locations, unit_types, unit_hps):
     neighbours = get_all_neighbours(loc)
-    return np.array([n for n in neighbours if n.tolist() in unit_locations[unit_types == type].tolist()])
+    living_type = (unit_types == unit_type) & (unit_hps > 0)
+    return np.array(
+        [n for n in neighbours if n.tolist() in unit_locations[living_type].tolist()])
 
 
 def get_all_neighbours(loc):
@@ -134,7 +137,6 @@ def find_first_step_in_path_to_nearest_target(grid, begin, targets):
         if np.any(targets_in_neighbours):
             path_found = True
 
-    # todo: everyone has only one preceeder, thus tiebreaking does not for, fix it!
     nearest_targets = targets[targets_in_neighbours]
     if len(nearest_targets) == 0:
         return None
@@ -183,7 +185,8 @@ def tick(grid, unit_locations, unit_types, unit_hps, unit_attacks):
         enemy_dists = dist(unit_loc, enemy_locations)  # recalculate after movement
         # attacking part
         if min(enemy_dists) == 1:
-            adjacent_enemies = get_type_neighbours(unit_loc, get_enemy_type(unit_type), unit_locations, unit_types)
+            adjacent_enemies = get_type_neighbours(unit_loc, get_enemy_type(unit_type), unit_locations, unit_types,
+                                                   unit_hps)
             adjacent_enemy_indices = [i in adjacent_enemies.tolist() for i in unit_locations.tolist()]
             min_living_hp = unit_hps[adjacent_enemy_indices & (unit_hps > 0)].min()
             min_adjacent_enemy_health_indices = adjacent_enemy_indices & (unit_hps == min_living_hp)
@@ -202,7 +205,7 @@ def tick(grid, unit_locations, unit_types, unit_hps, unit_attacks):
 def evaluate_map(grid, unit_locations, units_types):
     unit_hps = np.ones_like(units_types) * 200
     unit_attacks = np.ones_like(units_types) * 3
-    print_grid(grid, unit_locations, units_types, unit_hps)
+    # print_grid(grid, unit_locations, units_types, unit_hps)
     someone_wins = False
     num_rounds = 0
     while not someone_wins:
@@ -210,8 +213,8 @@ def evaluate_map(grid, unit_locations, units_types):
             grid, unit_locations, units_types, unit_hps, unit_attacks)
         if full_turn:
             num_rounds += 1
-        print('round ', num_rounds)
-        print_grid(grid, unit_locations, units_types, unit_hps)
+        # print('round ', num_rounds)
+        # print_grid(grid, unit_locations, units_types, unit_hps)
 
     # print(num_rounds)
     # print(unit_hps[unit_hps > 0].sum())
@@ -237,67 +240,67 @@ def parse_input_string(string):
 
 
 if __name__ == '__main__':
-#     assert evaluate_map(*parse_map(parse_input_string('''
-# #######
-# #.G...#
-# #...EG#
-# #.#.#G#
-# #..G#E#
-# #.....#
-# #######
-# '''))) == 27730
-#
-#     assert evaluate_map(*parse_map(parse_input_string('''
-# #######
-# #G..#E#
-# #E#E.E#
-# #G.##.#
-# #...#E#
-# #...E.#
-# #######
-# '''))) == 36334
-#
-#     assert evaluate_map(*parse_map(parse_input_string('''
-# #######
-# #E..EG#
-# #.#G.E#
-# #E.##E#
-# #G..#.#
-# #..E#.#
-# #######
-# '''))) == 39514
-#
-#     assert evaluate_map(*parse_map(parse_input_string('''
-# #######
-# #E.G#.#
-# #.#G..#
-# #G.#.G#
-# #G..#.#
-# #...E.#
-# #######
-# '''))) == 27755
-#
-#     assert evaluate_map(*parse_map(parse_input_string('''
-# #######
-# #.E...#
-# #.#..G#
-# #.###.#
-# #E#G#G#
-# #...#G#
-# #######
-# '''))) == 28944
-#
-#     assert evaluate_map(*parse_map(parse_input_string('''
-# #########
-# #G......#
-# #.E.#...#
-# #..##..G#
-# #...##..#
-# #...#...#
-# #.G...G.#
-# #.....G.#
-# #########
-# '''))) == 18740
+    #     assert evaluate_map(*parse_map(parse_input_string('''
+    # #######
+    # #.G...#
+    # #...EG#
+    # #.#.#G#
+    # #..G#E#
+    # #.....#
+    # #######
+    # '''))) == 27730
+    #
+    #     assert evaluate_map(*parse_map(parse_input_string('''
+    # #######
+    # #G..#E#
+    # #E#E.E#
+    # #G.##.#
+    # #...#E#
+    # #...E.#
+    # #######
+    # '''))) == 36334
+    #
+    #     assert evaluate_map(*parse_map(parse_input_string('''
+    # #######
+    # #E..EG#
+    # #.#G.E#
+    # #E.##E#
+    # #G..#.#
+    # #..E#.#
+    # #######
+    # '''))) == 39514
+    #
+    #     assert evaluate_map(*parse_map(parse_input_string('''
+    # #######
+    # #E.G#.#
+    # #.#G..#
+    # #G.#.G#
+    # #G..#.#
+    # #...E.#
+    # #######
+    # '''))) == 27755
+    #
+    #     assert evaluate_map(*parse_map(parse_input_string('''
+    # #######
+    # #.E...#
+    # #.#..G#
+    # #.###.#
+    # #E#G#G#
+    # #...#G#
+    # #######
+    # '''))) == 28944
+    #
+    #     assert evaluate_map(*parse_map(parse_input_string('''
+    # #########
+    # #G......#
+    # #.E.#...#
+    # #..##..G#
+    # #...##..#
+    # #...#...#
+    # #.G...G.#
+    # #.....G.#
+    # #########
+    # '''))) == 18740
 
     from time import time
 
