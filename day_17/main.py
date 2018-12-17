@@ -121,6 +121,28 @@ def prepare_rules():
     return conditions, results, conv_conditions
 
 
+def get_right_border(grid, y, x):
+    curr_x = x
+    while True:
+        curr_x += 1
+        if not np.isin(grid[y + 1, x], [CLAY, PUDDLE]) and grid[y, x] == FREE:
+            break
+        if grid[y, x + 1] == CLAY:
+            break
+    return x
+
+
+def get_left_border(grid, y, x):
+    curr_x = x
+    while True:
+        curr_x -= 1
+        if not np.isin(grid[y + 1, x], [CLAY, PUDDLE]) and grid[y, x] == FREE:
+            break
+        if grid[y, x - 1] == CLAY:
+            break
+    return x
+
+
 def tick(grid, conditions, results, conv_conditions):
     # apparently convolution is nice for water falling down, but apparently cant solve everything and thus I will go to graph-style solution
     # matches = []
@@ -154,21 +176,11 @@ def tick(grid, conditions, results, conv_conditions):
             first_clay_y = min(floors)
             grid[y:first_clay_y, x] = WATER
 
-    def right_border_filter():
-        return (grid[y, x:] == CLAY) & \
-               (np.isin(grid[y + 1, x:], [CLAY, PUDDLE])) & \
-               (np.isin(np.roll(grid[y + 1, x:], 1), [CLAY, PUDDLE]))
-
-    def left_border_filter():
-        return (grid[y, :x + 1] == CLAY) & \
-               (np.isin(grid[y + 1, :x + 1], [CLAY, PUDDLE])) & \
-               (np.isin(np.roll(grid[y + 1, :x + 1], -1), [CLAY, PUDDLE]))
-
     # steady water/puddle spreading to sides
     puddle_to_spread = np.where((grid == WATER) & (np.isin(np.roll(grid, -1, axis=0), [CLAY, PUDDLE])))
     for y, x in zip(*puddle_to_spread):
-        right_border = np.where(right_border_filter())[0]
-        left_border = np.where(left_border_filter())[0]
+        right_border = get_right_border(y, x)
+        left_border = left_border(y, x)
         if len(right_border) == 0 or len(left_border) == 0:
             continue  # nowhere to spreqad, hole somewhere
         # todo: add border check and other rules
@@ -241,7 +253,7 @@ def part_1():
     # show_conv_collisions()
     # return
     old_grid = prepare_data()
-    old_grid = old_grid[:50, :]
+    old_grid = old_grid[:200, :]
     conditions, results, conv_conditions = prepare_rules()
     i = 0
     while True:
