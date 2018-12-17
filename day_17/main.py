@@ -145,7 +145,10 @@ def tick(grid, conditions, results, conv_conditions):
     # water falling down
     water_to_fall = np.where((grid == WATER) & (np.roll(grid, -1, axis=0) == FREE))
     for y, x in zip(*water_to_fall):
-        first_clay_y = min(np.where(grid[:, x] == CLAY)[0])
+        floors = np.where(grid[:, x] == CLAY)[0]
+        if len(floors) == 0:
+            pass    # hit floor, just send it to the end of array, we are down
+        first_clay_y = min(floors)
         grid[y:first_clay_y, x] = WATER
 
     # steady water/puddle spreading to sides
@@ -153,10 +156,34 @@ def tick(grid, conditions, results, conv_conditions):
     for y, x in zip(*puddle_to_spread):
         right_border = np.where((grid[y, x:] == CLAY) & (np.isin(grid[y + 1, x:], [CLAY, PUDDLE])))[0]
         left_border = np.where((grid[y, :x] == CLAY) & (np.isin(grid[y + 1, :x], [CLAY, PUDDLE])))[0]
+        if len(right_border) == 0 or len(left_border) == 0:
+            continue    # nowhere to spreqad, hole somewhere
         # todo: add border check and other rules
         first_clay_right_x = x + min(right_border)
         first_clay_left_x = max(left_border)
         grid[y, first_clay_left_x+1:first_clay_right_x] = PUDDLE
+
+    # falling water spreading to sides
+    water_to_spread = np.where((grid == WATER) & (np.isin(np.roll(grid, -1, axis=0), [CLAY, PUDDLE])))
+    # add some checker to stop evaluating what has already been evaluated
+    for y, x in zip(*water_to_spread):
+        right_border = np.where((grid[y, x:] == CLAY) & (np.isin(grid[y + 1, x:], [CLAY, PUDDLE])))[0]
+        left_border = np.where((grid[y, :x] == CLAY) & (np.isin(grid[y + 1, :x], [CLAY, PUDDLE])))[0]
+        if len(right_border) > 0 and len(left_border) > 0:
+            continue    # earlier case, should spread puddle
+
+        right_stream_down = np.where((grid[y, x:] == WATER) & (np.isin(grid[y + 1, x:], [WATER])))[0]
+        left_stream_down = np.where((grid[y, :x] == WATER) & (np.isin(grid[y + 1, :x], [WATER])))[0]
+        if len(right_stream_down) > 0 or len(left_stream_down) > 0:
+            continue    # already evaluated stream
+
+        right_hole = np.where((grid[y, x:] == FREE) & (np.isin(grid[y + 1, x:], [FREE])))[0]
+        left_hole = np.where((grid[y, :x] == FREE) & (np.isin(grid[y + 1, :x], [FREE])))[0]
+        # todo: add border check and other rules
+        first_clay_right_x = x + min(right_border.tolist() + (right_hole + 1).tolist()) # exclusive to inclusive
+        first_clay_left_x = max(left_border.tolist() + left_hole.tolist())
+        grid[y, first_clay_left_x:first_clay_right_x] = WATER
+
 
     # working filling part of first bowl
     return grid
