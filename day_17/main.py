@@ -1,11 +1,14 @@
 import re
+from itertools import product
+
 import numpy as np
 from scipy import signal
 
-CLAY = -1
-FREE = 1
-WATER = 2
-PUDDLE = 4  # louže, stojatá voda
+CLAY = 3
+FREE = 5
+WATER = 7
+PUDDLE = 11  # louže, stojatá voda
+# using lowest non-1 primes to guarrante unique results of convolutions
 
 # for better visual control
 m = {
@@ -78,9 +81,9 @@ def prepare_rules():
          '~~'],  # '~~'],
         ['|.',  # ['||',
          '~~'],  # '~~'],
-        ['#|'
+        ['#|',
          '#~'],
-        ['|#'
+        ['|#',
          '~#'],
     ]
     results = [
@@ -100,14 +103,15 @@ def prepare_rules():
          '~~'],
         ['||',
          '~~'],
-        ['#~'
+        ['#~',
          '#~'],
-        ['~#'
+        ['~#',
          '~#'],
     ]
     conditions = [[[m[char] for char in row] for row in c] for c in conditions]
     results = [[[m[char] for char in row] for row in c] for c in results]
     conv_conditions = [np.flip(np.flip(np.array(c), 0), 1) for c in conditions]  # need to flip for convolution
+    conv_conditions = [1 / c for c in conv_conditions]  # so multiplication results in 1 in match case
     results = [np.array(res) for res in results]
     return conditions, results, conv_conditions
 
@@ -115,7 +119,7 @@ def prepare_rules():
 def tick(grid, conditions, results, conv_conditions):
     matches = []
     for condition, result in zip(conv_conditions, results):
-        res = signal.convolve2d(grid, condition) == (condition ** 2).sum()
+        res = signal.convolve2d(grid, condition) == condition.size
         indices = np.where(res)
         if len(indices[0]) > 0:
             for y, x in zip(*indices):
@@ -134,6 +138,32 @@ def tick(grid, conditions, results, conv_conditions):
     return grid
 
 
+def show_conv_collisions():
+    conditions, results, conv_conditions = prepare_rules()
+    rules_shapes = set([c.shape for c in conv_conditions])
+    # splitting by shape
+    rules_by_shapes = dict()
+    for shape in rules_shapes:
+        rules_by_shapes[shape] = [i for i, c in enumerate(conv_conditions) if c.shape == shape]
+
+    for shape, indices in rules_by_shapes.items():
+        for i in indices:
+            conv_condition, result, condition = conv_conditions[i], results[i], np.array(conditions[i])
+            matches = 0
+            matched = []
+            all_combinations = list(product(m.values(), repeat=condition.size))
+            for variant in all_combinations:
+                grid_part = np.array(variant).reshape(shape)
+
+                res = signal.convolve2d(grid_part, conv_condition) == condition.size
+                indices = np.where(res)
+                if len(indices[0]) > 0:
+                    matches += len(indices[0])
+                    matched.append(grid_part)
+
+            print('found ', matches, ' matches for one condition')
+
+
 def print_grid(grid):
     string_grid = np.where(grid == FREE, '.', '?')
     string_grid[grid == WATER] = '|'
@@ -145,6 +175,8 @@ def print_grid(grid):
 
 
 def part_1():
+    # show_conv_collisions()
+    # return
     old_grid = prepare_data()
     conditions, results, conv_conditions = prepare_rules()
     while True:
