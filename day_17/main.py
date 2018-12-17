@@ -124,23 +124,27 @@ def prepare_rules():
 def get_right_border(grid, y, x):
     curr_x = x
     while True:
+        if curr_x >= grid.shape[1]:
+            return None
+        if np.isin(grid[y + 1, curr_x], [FREE, WATER]):
+            return None
+        if grid[y, curr_x + 1] == CLAY:
+            break
         curr_x += 1
-        if not np.isin(grid[y + 1, x], [CLAY, PUDDLE]) and grid[y, x] == FREE:
-            break
-        if grid[y, x + 1] == CLAY:
-            break
-    return x
+    return curr_x
 
 
 def get_left_border(grid, y, x):
     curr_x = x
     while True:
+        if curr_x < 0:
+            return None
+        if np.isin(grid[y + 1, curr_x], [FREE, WATER]):
+            return None
+        if grid[y, curr_x - 1] == CLAY:
+            break
         curr_x -= 1
-        if not np.isin(grid[y + 1, x], [CLAY, PUDDLE]) and grid[y, x] == FREE:
-            break
-        if grid[y, x - 1] == CLAY:
-            break
-    return x
+    return curr_x
 
 
 def tick(grid, conditions, results, conv_conditions):
@@ -179,22 +183,22 @@ def tick(grid, conditions, results, conv_conditions):
     # steady water/puddle spreading to sides
     puddle_to_spread = np.where((grid == WATER) & (np.isin(np.roll(grid, -1, axis=0), [CLAY, PUDDLE])))
     for y, x in zip(*puddle_to_spread):
-        right_border = get_right_border(y, x)
-        left_border = left_border(y, x)
-        if len(right_border) == 0 or len(left_border) == 0:
-            continue  # nowhere to spreqad, hole somewhere
+        right_border = get_right_border(grid, y, x)
+        left_border = get_left_border(grid, y, x)
+        if right_border is None or left_border is None:
+            continue  # nowhere to spread, hole somewhere
         # todo: add border check and other rules
-        first_clay_right_x = x + min(right_border)
-        first_clay_left_x = max(left_border)
-        grid[y, first_clay_left_x + 1:first_clay_right_x] = PUDDLE
+        first_clay_right_x = right_border
+        first_clay_left_x = left_border
+        grid[y, first_clay_left_x:first_clay_right_x+1] = PUDDLE
 
     # falling water spreading to sides
     water_to_spread = np.where((grid == WATER) & (np.isin(np.roll(grid, -1, axis=0), [CLAY, PUDDLE])))
     # add some checker to stop evaluating what has already been evaluated
     for y, x in zip(*water_to_spread):
-        right_border = np.where(right_border_filter())[0]
-        left_border = np.where(left_border_filter())[0]
-        if len(right_border) > 0 and len(left_border) > 0:
+        right_border = get_right_border(grid, y, x)
+        left_border = get_left_border(grid, y, x)
+        if right_border is not None and left_border is not None:
             continue  # earlier case, should spread puddle
 
         right_stream_down = np.where((grid[y, x:] == WATER) & (np.isin(grid[y + 1, x:], [WATER])))[0]
@@ -205,9 +209,13 @@ def tick(grid, conditions, results, conv_conditions):
         right_hole = np.where((grid[y, x:] == FREE) & (np.isin(grid[y + 1, x:], [FREE])))[0]
         left_hole = np.where((grid[y, :x] == FREE) & (np.isin(grid[y + 1, :x], [FREE])))[0]
         # todo: add border check and other rules
-        first_clay_right_x = x + min(right_border.tolist() + (right_hole + 1).tolist())  # exclusive to inclusive
-        first_clay_left_x = max(left_border.tolist() + (left_hole - 1).tolist())
-        grid[y, first_clay_left_x + 1:first_clay_right_x] = WATER
+        first_clay_right_x = x + min((right_hole + 1).tolist())  # exclusive to inclusive
+        if right_border is not None:
+            first_clay_right_x = min(right_border + 1, first_clay_right_x)
+        first_clay_left_x = max(left_hole.tolist())
+        if left_border is not None:
+            first_clay_left_x = max(left_border, first_clay_left_x)
+        grid[y, first_clay_left_x:first_clay_right_x] = WATER
 
     # working filling part of first bowl
     return grid
@@ -253,13 +261,13 @@ def part_1():
     # show_conv_collisions()
     # return
     old_grid = prepare_data()
-    old_grid = old_grid[:200, :]
+    old_grid = old_grid[:400, :]
     conditions, results, conv_conditions = prepare_rules()
     i = 0
     while True:
         new_grid = tick(old_grid.copy(), conditions, results, conv_conditions)
         # print_grid(new_grid)
-        grid_to_save = new_grid[:200, :]
+        grid_to_save = new_grid[:400, :]
         Image.fromarray(((grid_to_save / grid_to_save.max()) * 255).astype(np.uint8)).save('im-{}.png'.format(i))
         if np.allclose(old_grid, new_grid):
             break
