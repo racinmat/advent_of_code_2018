@@ -121,24 +121,44 @@ def prepare_rules():
 
 
 def tick(grid, conditions, results, conv_conditions):
-    matches = []
-    for condition, result in zip(conv_conditions, results):
-        res = signal.convolve2d(grid, condition) == condition.size
-        indices = np.where(res)
-        if len(indices[0]) > 0:
-            for y, x in zip(*indices):
-                matches.append(((y, x), result))
+    # apparently convolution is nice for water falling down, but apparently cant solve everything and thus I will go to graph-style solution
+    # matches = []
+    # for condition, result in zip(conv_conditions, results):
+    #     res = signal.convolve2d(grid, condition) == condition.size
+    #     indices = np.where(res)
+    #     if len(indices[0]) > 0:
+    #         for y, x in zip(*indices):
+    #             matches.append(((y, x), result))
+    #
+    # # apply only lowest level of changes should not be needed
+    # # max_y = max([indices[0] for indices, result in matches])
+    # # matches = [(indices, result) for indices, result in matches if indices[0] == max_y]
+    #
+    # for indices, result in matches:
+    #     y, x = indices
+    #     # todo: check 2x1 matrix indices
+    #     y_from, y_to = y - round(result.shape[0] / 2), y - round(result.shape[0] / 2) + result.shape[0]
+    #     x_from, x_to = x - round(result.shape[1] / 2), x - round(result.shape[1] / 2) + result.shape[1]
+    #     grid[y_from:y_to, x_from:x_to] = result
+    # return grid
 
-    # apply only lowest level of changes should not be needed
-    # max_y = max([indices[0] for indices, result in matches])
-    # matches = [(indices, result) for indices, result in matches if indices[0] == max_y]
+    # water falling down
+    water_to_fall = np.where((grid == WATER) & (np.roll(grid, -1, axis=0) == FREE))
+    for y, x in zip(*water_to_fall):
+        first_clay_y = min(np.where(grid[:, x] == CLAY)[0])
+        grid[y:first_clay_y, x] = WATER
 
-    for indices, result in matches:
-        y, x = indices
-        # todo: check 2x1 matrix indices
-        y_from, y_to = y - round(result.shape[0] / 2), y - round(result.shape[0] / 2) + result.shape[0]
-        x_from, x_to = x - round(result.shape[1] / 2), x - round(result.shape[1] / 2) + result.shape[1]
-        grid[y_from:y_to, x_from:x_to] = result
+    # steady water/puddle spreading to sides
+    puddle_to_spread = np.where((grid == WATER) & (np.isin(np.roll(grid, -1, axis=0), [CLAY, PUDDLE])))
+    for y, x in zip(*puddle_to_spread):
+        right_border = np.where((grid[y, x:] == CLAY) & (np.isin(grid[y + 1, x:], [CLAY, PUDDLE])))[0]
+        left_border = np.where((grid[y, :x] == CLAY) & (np.isin(grid[y + 1, :x], [CLAY, PUDDLE])))[0]
+        # todo: add border check and other rules
+        first_clay_right_x = x + min(right_border)
+        first_clay_left_x = max(left_border)
+        grid[y, first_clay_left_x+1:first_clay_right_x] = PUDDLE
+
+    # working filling part of first bowl
     return grid
 
 
