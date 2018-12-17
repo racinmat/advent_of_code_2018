@@ -179,28 +179,7 @@ def get_left_stream_down(grid, y, x):
     return curr_x
 
 
-def tick(grid, conditions, results, conv_conditions):
-    # apparently convolution is nice for water falling down, but apparently cant solve everything and thus I will go to graph-style solution
-    # matches = []
-    # for condition, result in zip(conv_conditions, results):
-    #     res = signal.convolve2d(grid, condition) == condition.size
-    #     indices = np.where(res)
-    #     if len(indices[0]) > 0:
-    #         for y, x in zip(*indices):
-    #             matches.append(((y, x), result))
-    #
-    # # apply only lowest level of changes should not be needed
-    # # max_y = max([indices[0] for indices, result in matches])
-    # # matches = [(indices, result) for indices, result in matches if indices[0] == max_y]
-    #
-    # for indices, result in matches:
-    #     y, x = indices
-    #     # todo: check 2x1 matrix indices
-    #     y_from, y_to = y - round(result.shape[0] / 2), y - round(result.shape[0] / 2) + result.shape[0]
-    #     x_from, x_to = x - round(result.shape[1] / 2), x - round(result.shape[1] / 2) + result.shape[1]
-    #     grid[y_from:y_to, x_from:x_to] = result
-    # return grid
-
+def tick(grid, cache):
     # water falling down
     water_to_fall = np.where((grid == WATER) & (np.roll(grid, -1, axis=0) == FREE))
     for y, x in zip(*water_to_fall):
@@ -215,11 +194,16 @@ def tick(grid, conditions, results, conv_conditions):
     # steady water/puddle spreading to sides
     puddle_to_spread = np.where((grid == WATER) & (np.isin(np.roll(grid, -1, axis=0), [CLAY, PUDDLE])))
     for y, x in zip(*puddle_to_spread):
+        if (y, x) in cache['puddle_to_spread']:
+            continue
+        #     todo: cache too agressive, something messed up
+        cache['puddle_to_spread'].add((y, x))
+
         right_border = get_right_border(grid, y, x)
         left_border = get_left_border(grid, y, x)
         if right_border is None or left_border is None:
             continue  # nowhere to spread, hole somewhere
-        # todo: add border check and other rules
+
         first_clay_right_x = right_border
         first_clay_left_x = left_border
         grid[y, first_clay_left_x:first_clay_right_x+1] = PUDDLE
@@ -228,6 +212,10 @@ def tick(grid, conditions, results, conv_conditions):
     water_to_spread = np.where((grid == WATER) & (np.isin(np.roll(grid, -1, axis=0), [CLAY, PUDDLE])))
     # add some checker to stop evaluating what has already been evaluated
     for y, x in zip(*water_to_spread):
+        if (y, x) in cache['water_to_spread']:
+            continue
+        cache['water_to_spread'].add((y, x))
+
         right_border = get_right_border(grid, y, x)
         left_border = get_left_border(grid, y, x)
         if right_border is not None and left_border is not None:
@@ -236,13 +224,11 @@ def tick(grid, conditions, results, conv_conditions):
         right_stream_down = get_right_stream_down(grid, y, x)
         left_stream_down = get_left_stream_down(grid, y, x)
         # this finds streams from different water, I must check proximity, probably?
-        # todo: detect only nearest stream down, probably manually, not by numpy
         if right_stream_down is not None or left_stream_down is not None:
             continue  # already evaluated stream
 
         right_hole = np.where((grid[y, x:] == FREE) & (np.isin(grid[y + 1, x:], [FREE])))[0]
         left_hole = np.where((grid[y, :x] == FREE) & (np.isin(grid[y + 1, :x], [FREE])))[0]
-        # todo: add border check and other rules
         first_clay_right_x = grid.shape[1]
         if len(right_hole) > 0:
             first_clay_right_x = min(first_clay_right_x, x + min((right_hole + 1).tolist()))  # exclusive to inclusive
@@ -257,33 +243,7 @@ def tick(grid, conditions, results, conv_conditions):
         grid[y, first_clay_left_x:first_clay_right_x] = WATER
 
     # working filling part of first bowl
-    return grid
-
-
-def show_conv_collisions():
-    conditions, results, conv_conditions = prepare_rules()
-    rules_shapes = set([c.shape for c in conv_conditions])
-    # splitting by shape
-    rules_by_shapes = dict()
-    for shape in rules_shapes:
-        rules_by_shapes[shape] = [i for i, c in enumerate(conv_conditions) if c.shape == shape]
-
-    for shape, indices in rules_by_shapes.items():
-        for i in indices:
-            conv_condition, result, condition = conv_conditions[i], results[i], np.array(conditions[i])
-            matches = 0
-            matched = []
-            all_combinations = list(product(m.values(), repeat=condition.size))
-            for variant in all_combinations:
-                grid_part = np.array(variant).reshape(shape)
-
-                res = signal.convolve2d(grid_part, conv_condition) == condition.size
-                indices = np.where(res)
-                if len(indices[0]) > 0:
-                    matches += len(indices[0])
-                    matched.append(grid_part)
-
-            print('found ', matches, ' matches for one condition')
+    return grid, cache
 
 
 def print_grid(grid):
@@ -297,23 +257,23 @@ def print_grid(grid):
 
 
 def part_1():
-    # show_conv_collisions()
-    # return
     old_grid = prepare_data()
-    old_grid = old_grid[:800, :]
-    conditions, results, conv_conditions = prepare_rules()
+    old_grid = old_grid[:, :]
     i = 0
+
+    cache = {'water_to_spread': set(), 'puddle_to_spread': set()}
+
     while True:
-        new_grid = tick(old_grid.copy(), conditions, results, conv_conditions)
+        new_grid, cache = tick(old_grid.copy(), cache)
         # print_grid(new_grid)
-        grid_to_save = new_grid[:800, :]
+        grid_to_save = new_grid
         Image.fromarray(((grid_to_save / grid_to_save.max()) * 255).astype(np.uint8)).save('im-{}.png'.format(i))
         if np.allclose(old_grid, new_grid):
             break
         old_grid = new_grid
         i += 1
     print(np.sum(np.isin(new_grid, [WATER, PUDDLE])) - 1)  # - 1 for spring
-
+# 5054 is too low
 
 def part_2():
     pass
