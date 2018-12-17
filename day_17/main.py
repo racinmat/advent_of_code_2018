@@ -81,10 +81,12 @@ def prepare_rules():
          '~~'],  # '~~'],
         ['|.',  # ['||',
          '~~'],  # '~~'],
-        ['#|',
-         '#~'],
-        ['|#',
-         '~#'],
+        ['#||',
+         '#~~'],
+        ['||#',
+         '~~#'],
+        ['#|#',
+         '#~#'],
     ]
     results = [
         ['|',
@@ -103,10 +105,12 @@ def prepare_rules():
          '~~'],
         ['||',
          '~~'],
-        ['#~',
-         '#~'],
-        ['~#',
-         '~#'],
+        ['#~~',
+         '#~~'],
+        ['~~#',
+         '~~#'],
+        ['#~#',
+         '#~#'],
     ]
     conditions = [[[m[char] for char in row] for row in c] for c in conditions]
     results = [[[m[char] for char in row] for row in c] for c in results]
@@ -125,9 +129,9 @@ def tick(grid, conditions, results, conv_conditions):
             for y, x in zip(*indices):
                 matches.append(((y, x), result))
 
-    # apply only lowest level of changes:
-    max_y = max([indices[0] for indices, result in matches])
-    matches = [(indices, result) for indices, result in matches if indices[0] == max_y]
+    # apply only lowest level of changes should not be needed
+    # max_y = max([indices[0] for indices, result in matches])
+    # matches = [(indices, result) for indices, result in matches if indices[0] == max_y]
 
     for indices, result in matches:
         y, x = indices
