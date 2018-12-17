@@ -22,7 +22,7 @@ m = {
 
 def load_input():
     clays = []
-    with open('test_input.txt', encoding='utf-8') as lines:
+    with open('input.txt', encoding='utf-8') as lines:
         for line in lines:
             m = re.match('([xy])=(\d+)\.?\.?(\d+)?, ([xy])=(\d+)\.?\.?(\d+)?', line.replace('\n', ''))
             g = m.groups()
@@ -154,6 +154,9 @@ def get_right_stream_down(grid, y, x):
             return None
         if grid[y, curr_x] == WATER and grid[y + 1, curr_x] == WATER:
             break
+        # is water spread in same iteration and did not go down yet
+        if grid[y, curr_x] == WATER and grid[y + 1, curr_x] == FREE:
+            break
         if np.isin(grid[y + 1, curr_x], [FREE, WATER]) or np.isin(grid[y, curr_x], [CLAY, PUDDLE]):
             return None
         curr_x += 1
@@ -166,6 +169,9 @@ def get_left_stream_down(grid, y, x):
         if curr_x < 0:
             return None
         if grid[y, curr_x] == WATER and grid[y + 1, curr_x] == WATER:
+            break
+        # is water spread in same iteration and did not go down yet
+        if grid[y, curr_x] == WATER and grid[y + 1, curr_x] == FREE:
             break
         if np.isin(grid[y + 1, curr_x], [FREE, WATER]) or np.isin(grid[y, curr_x], [CLAY, PUDDLE]):
             return None
@@ -299,7 +305,7 @@ def part_1():
     i = 0
     while True:
         new_grid = tick(old_grid.copy(), conditions, results, conv_conditions)
-        print_grid(new_grid)
+        # print_grid(new_grid)
         grid_to_save = new_grid[:800, :]
         Image.fromarray(((grid_to_save / grid_to_save.max()) * 255).astype(np.uint8)).save('im-{}.png'.format(i))
         if np.allclose(old_grid, new_grid):
