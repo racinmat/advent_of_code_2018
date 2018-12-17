@@ -145,11 +145,13 @@ def tick(grid, conditions, results, conv_conditions):
     # water falling down
     water_to_fall = np.where((grid == WATER) & (np.roll(grid, -1, axis=0) == FREE))
     for y, x in zip(*water_to_fall):
-        floors = np.where(grid[:, x] == CLAY)[0]
+        floors = y + np.where(grid[y:, x] == CLAY)[0]
         if len(floors) == 0:
-            pass    # hit floor, just send it to the end of array, we are down
-        first_clay_y = min(floors)
-        grid[y:first_clay_y, x] = WATER
+            # hit the bottom
+            grid[y:, x] = WATER
+        else:
+            first_clay_y = min(floors)
+            grid[y:first_clay_y, x] = WATER
 
     # steady water/puddle spreading to sides
     puddle_to_spread = np.where((grid == WATER) & (np.isin(np.roll(grid, -1, axis=0), [CLAY, PUDDLE])))
