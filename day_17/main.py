@@ -22,7 +22,7 @@ m = {
 
 def load_input():
     clays = []
-    with open('input.txt', encoding='utf-8') as lines:
+    with open('test_input.txt', encoding='utf-8') as lines:
         for line in lines:
             m = re.match('([xy])=(\d+)\.?\.?(\d+)?, ([xy])=(\d+)\.?\.?(\d+)?', line.replace('\n', ''))
             g = m.groups()
@@ -147,6 +147,32 @@ def get_left_border(grid, y, x):
     return curr_x
 
 
+def get_right_stream_down(grid, y, x):
+    curr_x = x
+    while True:
+        if curr_x >= grid.shape[1]:
+            return None
+        if grid[y, curr_x] == WATER and grid[y + 1, curr_x] == WATER:
+            break
+        if np.isin(grid[y + 1, curr_x], [FREE, WATER]) or np.isin(grid[y, curr_x], [CLAY, PUDDLE]):
+            return None
+        curr_x += 1
+    return curr_x
+
+
+def get_left_stream_down(grid, y, x):
+    curr_x = x
+    while True:
+        if curr_x < 0:
+            return None
+        if grid[y, curr_x] == WATER and grid[y + 1, curr_x] == WATER:
+            break
+        if np.isin(grid[y + 1, curr_x], [FREE, WATER]) or np.isin(grid[y, curr_x], [CLAY, PUDDLE]):
+            return None
+        curr_x -= 1
+    return curr_x
+
+
 def tick(grid, conditions, results, conv_conditions):
     # apparently convolution is nice for water falling down, but apparently cant solve everything and thus I will go to graph-style solution
     # matches = []
@@ -201,11 +227,11 @@ def tick(grid, conditions, results, conv_conditions):
         if right_border is not None and left_border is not None:
             continue  # earlier case, should spread puddle
 
-        right_stream_down = np.where((grid[y, x:] == WATER) & (np.isin(grid[y + 1, x:], [WATER])))[0]
-        left_stream_down = np.where((grid[y, :x] == WATER) & (np.isin(grid[y + 1, :x], [WATER])))[0]
+        right_stream_down = get_right_stream_down(grid, y, x)
+        left_stream_down = get_left_stream_down(grid, y, x)
         # this finds streams from different water, I must check proximity, probably?
         # todo: detect only nearest stream down, probably manually, not by numpy
-        if len(right_stream_down) > 0 or len(left_stream_down) > 0:
+        if right_stream_down is not None or left_stream_down is not None:
             continue  # already evaluated stream
 
         right_hole = np.where((grid[y, x:] == FREE) & (np.isin(grid[y + 1, x:], [FREE])))[0]
@@ -273,7 +299,7 @@ def part_1():
     i = 0
     while True:
         new_grid = tick(old_grid.copy(), conditions, results, conv_conditions)
-        # print_grid(new_grid)
+        print_grid(new_grid)
         grid_to_save = new_grid[:800, :]
         Image.fromarray(((grid_to_save / grid_to_save.max()) * 255).astype(np.uint8)).save('im-{}.png'.format(i))
         if np.allclose(old_grid, new_grid):
