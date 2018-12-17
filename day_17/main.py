@@ -203,16 +203,23 @@ def tick(grid, conditions, results, conv_conditions):
 
         right_stream_down = np.where((grid[y, x:] == WATER) & (np.isin(grid[y + 1, x:], [WATER])))[0]
         left_stream_down = np.where((grid[y, :x] == WATER) & (np.isin(grid[y + 1, :x], [WATER])))[0]
+        # this finds streams from different water, I must check proximity, probably?
+        # todo: detect only nearest stream down, probably manually, not by numpy
         if len(right_stream_down) > 0 or len(left_stream_down) > 0:
             continue  # already evaluated stream
 
         right_hole = np.where((grid[y, x:] == FREE) & (np.isin(grid[y + 1, x:], [FREE])))[0]
         left_hole = np.where((grid[y, :x] == FREE) & (np.isin(grid[y + 1, :x], [FREE])))[0]
         # todo: add border check and other rules
-        first_clay_right_x = x + min((right_hole + 1).tolist())  # exclusive to inclusive
+        first_clay_right_x = grid.shape[1]
+        if len(right_hole) > 0:
+            first_clay_right_x = min(first_clay_right_x, x + min((right_hole + 1).tolist()))  # exclusive to inclusive
         if right_border is not None:
             first_clay_right_x = min(right_border + 1, first_clay_right_x)
-        first_clay_left_x = max(left_hole.tolist())
+
+        first_clay_left_x = 0
+        if len(left_hole) > 0:
+            first_clay_left_x = max(first_clay_left_x, max(left_hole.tolist()))
         if left_border is not None:
             first_clay_left_x = max(left_border, first_clay_left_x)
         grid[y, first_clay_left_x:first_clay_right_x] = WATER
@@ -261,13 +268,13 @@ def part_1():
     # show_conv_collisions()
     # return
     old_grid = prepare_data()
-    old_grid = old_grid[:400, :]
+    old_grid = old_grid[:800, :]
     conditions, results, conv_conditions = prepare_rules()
     i = 0
     while True:
         new_grid = tick(old_grid.copy(), conditions, results, conv_conditions)
         # print_grid(new_grid)
-        grid_to_save = new_grid[:400, :]
+        grid_to_save = new_grid[:800, :]
         Image.fromarray(((grid_to_save / grid_to_save.max()) * 255).astype(np.uint8)).save('im-{}.png'.format(i))
         if np.allclose(old_grid, new_grid):
             break
