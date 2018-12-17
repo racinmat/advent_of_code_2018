@@ -5,6 +5,15 @@ from scipy import signal
 CLAY = -1
 FREE = 1
 WATER = 2
+PUDDLE = 4  # louže, stojatá voda
+
+# for better visual control
+m = {
+    '|': WATER,
+    '#': CLAY,
+    '.': FREE,
+    '~': PUDDLE,
+}
 
 
 def load_input():
@@ -49,46 +58,55 @@ def prepare_data():
 
 
 def prepare_rules():
+    # everything is in bowl-like shape, so puddle spread should be working, can match corner patterns
+    # todo: implement puddle to know which water is stackable upwards
+    # todo: find number which will be unique indentifiers for 4 classes on 2x2 metrics
     conditions = [
-        [[WATER],
-         [FREE]],
-        [[FREE, WATER],
-         [CLAY, CLAY]],
-        [[WATER, FREE],
-         [CLAY, CLAY]],
-        [[WATER, FREE],
-         [WATER, WATER]],
-        [[FREE, WATER],
-         [WATER, WATER]],
-        [[FREE, WATER],
-         [CLAY, WATER]],
-        [[WATER, FREE],
-         [WATER, CLAY]],
-        [[WATER, FREE],
-         [CLAY, FREE]],
-        [[FREE, WATER],
-         [FREE, CLAY]],
+        ['|',  # ['|',
+         '.'],  # '|'],
+        ['.|',  # ['||',
+         '##'],  # '##'],
+        ['|.',  # ['||',
+         '##'],  # '##'],
+        ['#|',  # ['#~',
+         '##'],  # '##'],
+        ['|#',  # ['~#',
+         '##'],  # '##'],
+        ['~|'],  # ['~~'],
+        ['|~'],  # ['~~'],
+        ['.|',  # ['||',
+         '~~'],  # '~~'],
+        ['|.',  # ['||',
+         '~~'],  # '~~'],
+        ['#|'
+         '#~'],
+        ['|#'
+         '~#'],
     ]
     results = [
-        [[WATER],
-         [WATER]],
-        [[WATER, WATER],
-         [CLAY, CLAY]],
-        [[WATER, WATER],
-         [CLAY, CLAY]],
-        [[WATER, WATER],
-         [WATER, WATER]],
-        [[WATER, WATER],
-         [WATER, WATER]],
-        [[WATER, WATER],
-         [CLAY, WATER]],
-        [[WATER, WATER],
-         [WATER, CLAY]],
-        [[WATER, WATER],
-         [CLAY, FREE]],
-        [[WATER, WATER],
-         [FREE, CLAY]],
+        ['|',
+         '|'],
+        ['||',
+         '##'],
+        ['||',
+         '##'],
+        ['#~',
+         '##'],
+        ['~#',
+         '##'],
+        ['~~'],
+        ['~~'],
+        ['||',
+         '~~'],
+        ['||',
+         '~~'],
+        ['#~'
+         '#~'],
+        ['~#'
+         '~#'],
     ]
+    conditions = [[[m[char] for char in row] for row in c] for c in conditions]
+    results = [[[m[char] for char in row] for row in c] for c in results]
     conv_conditions = [np.flip(np.flip(np.array(c), 0), 1) for c in conditions]  # need to flip for convolution
     results = [np.array(res) for res in results]
     return conditions, results, conv_conditions
@@ -109,6 +127,7 @@ def tick(grid, conditions, results, conv_conditions):
 
     for indices, result in matches:
         y, x = indices
+        # todo: check 2x1 matrix indices
         y_from, y_to = y - round(result.shape[0] / 2), y - round(result.shape[0] / 2) + result.shape[0]
         x_from, x_to = x - round(result.shape[1] / 2), x - round(result.shape[1] / 2) + result.shape[1]
         grid[y_from:y_to, x_from:x_to] = result
@@ -116,8 +135,10 @@ def tick(grid, conditions, results, conv_conditions):
 
 
 def print_grid(grid):
-    string_grid = np.where(grid == FREE, '.', '#')
+    string_grid = np.where(grid == FREE, '.', '?')
     string_grid[grid == WATER] = '|'
+    string_grid[grid == PUDDLE] = '~'
+    string_grid[grid == CLAY] = '#'
 
     [print(''.join(i)) for i in string_grid]
     print()
