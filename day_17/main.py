@@ -65,7 +65,7 @@ def get_right_border(grid, y, x, cache):
     if (y, x) in cache['right_border']:
         right_border = cache['right_border'][(y, x)]
         # check cached solution and check if stream is still here
-        if np.all(np.isin(grid[y+1, x:right_border], [CLAY, PUDDLE])) and grid[y, right_border + 1] == CLAY:
+        if np.all(np.isin(grid[y + 1, x:right_border], [CLAY, PUDDLE])) and grid[y, right_border + 1] == CLAY:
             return right_border
 
     curr_x = x
@@ -85,7 +85,7 @@ def get_left_border(grid, y, x, cache):
     if (y, x) in cache['left_border']:
         left_border = cache['left_border'][(y, x)]
         # check cached solution and check if stream is still here
-        if np.all(np.isin(grid[y+1, left_border:x], [CLAY, PUDDLE])) and grid[y, left_border - 1] == CLAY:
+        if np.all(np.isin(grid[y + 1, left_border:x], [CLAY, PUDDLE])) and grid[y, left_border - 1] == CLAY:
             return left_border
 
     curr_x = x
@@ -159,8 +159,11 @@ def tick(grid, cache):
             first_clay_y = min(floors)
             grid[y:first_clay_y, x] = WATER
 
-    # steady water/puddle spreading to sides
-    puddle_to_spread = np.where((grid == WATER) & (np.isin(np.roll(grid, -1, axis=0), [CLAY, PUDDLE])))
+    # steady water/puddle spreading to sides: water, clay or puddle below it, free or clay next to it on both sides
+    puddle_to_spread = np.where((grid == WATER) &
+                                (np.isin(np.roll(grid, -1, axis=0), [CLAY, PUDDLE])) &
+                                ((np.isin(np.roll(grid, 1, axis=1), [CLAY, FREE])) |
+                                 (np.isin(np.roll(grid, -1, axis=1), [CLAY, FREE]))))
     for y, x in zip(*puddle_to_spread):
         if (y, x) in cache['puddle_to_spread']:
             continue
@@ -175,7 +178,7 @@ def tick(grid, cache):
         grid[y, first_clay_left_x:first_clay_right_x + 1] = PUDDLE
         cache['puddle_to_spread'].add((y, x))
 
-    # falling water spreading to sides
+    # falling water spreading to sides: water, puddle or clay below it, and free left or right from it
     water_to_spread = np.where((grid == WATER) &
                                (np.isin(np.roll(grid, -1, axis=0), [CLAY, PUDDLE])) &
                                ((np.isin(np.roll(grid, 1, axis=1), [FREE])) |
@@ -245,6 +248,7 @@ def part_1():
         old_grid = new_grid
         i += 1
     print(np.sum(np.isin(new_grid, [WATER, PUDDLE])) - 1)  # - 1 for spring
+
 
 # 31547 too low
 
