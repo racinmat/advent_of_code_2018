@@ -176,7 +176,10 @@ def tick(grid, cache):
         cache['puddle_to_spread'].add((y, x))
 
     # falling water spreading to sides
-    water_to_spread = np.where((grid == WATER) & (np.isin(np.roll(grid, -1, axis=0), [CLAY, PUDDLE])))
+    water_to_spread = np.where((grid == WATER) &
+                               (np.isin(np.roll(grid, -1, axis=0), [CLAY, PUDDLE])) &
+                               ((np.isin(np.roll(grid, 1, axis=1), [FREE])) |
+                                (np.isin(np.roll(grid, -1, axis=1), [FREE]))))
     # add some checker to stop evaluating what has already been evaluated
     for y, x in zip(*water_to_spread):
         if (y, x) in cache['water_to_spread']:
@@ -226,7 +229,7 @@ def print_grid(grid):
 
 def part_1():
     old_grid = prepare_data()
-    old_grid = old_grid[:300, :]
+    old_grid = old_grid[:500, :]
     i = 0
 
     cache = {'water_to_spread': set(), 'puddle_to_spread': set(), 'left_stream_down': dict(),
@@ -245,8 +248,6 @@ def part_1():
 
 # 31547 too low
 
-# 4695
-# 30.12916374206543
 def part_2():
     pass
 
