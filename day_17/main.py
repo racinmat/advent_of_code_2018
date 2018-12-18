@@ -61,66 +61,6 @@ def prepare_data():
     return grid
 
 
-def prepare_rules():
-    # everything is in bowl-like shape, so puddle spread should be working, can match corner patterns
-    # todo: implement puddle to know which water is stackable upwards
-    # todo: find number which will be unique indentifiers for 4 classes on 2x2 metrics
-    conditions = [
-        ['|',  # ['|',
-         '.'],  # '|'],
-        ['.|',  # ['||',
-         '##'],  # '##'],
-        ['|.',  # ['||',
-         '##'],  # '##'],
-        ['#|',  # ['#~',
-         '##'],  # '##'],
-        ['|#',  # ['~#',
-         '##'],  # '##'],
-        ['~|'],  # ['~~'],
-        ['|~'],  # ['~~'],
-        ['.|',  # ['||',
-         '~~'],  # '~~'],
-        ['|.',  # ['||',
-         '~~'],  # '~~'],
-        ['#||',
-         '#~~'],
-        ['||#',
-         '~~#'],
-        ['#|#',
-         '#~#'],
-    ]
-    results = [
-        ['|',
-         '|'],
-        ['||',
-         '##'],
-        ['||',
-         '##'],
-        ['#~',
-         '##'],
-        ['~#',
-         '##'],
-        ['~~'],
-        ['~~'],
-        ['||',
-         '~~'],
-        ['||',
-         '~~'],
-        ['#~~',
-         '#~~'],
-        ['~~#',
-         '~~#'],
-        ['#~#',
-         '#~#'],
-    ]
-    conditions = [[[m[char] for char in row] for row in c] for c in conditions]
-    results = [[[m[char] for char in row] for row in c] for c in results]
-    conv_conditions = [np.flip(np.flip(np.array(c), 0), 1) for c in conditions]  # need to flip for convolution
-    conv_conditions = [1 / c for c in conv_conditions]  # so multiplication results in 1 in match case
-    results = [np.array(res) for res in results]
-    return conditions, results, conv_conditions
-
-
 def get_right_border(grid, y, x):
     curr_x = x
     while True:
@@ -147,7 +87,12 @@ def get_left_border(grid, y, x):
     return curr_x
 
 
-def get_right_stream_down(grid, y, x):
+def get_right_stream_down(grid, y, x, cache):
+    # if (y, x) in cache['right_stream_down']:
+    #     continue
+    # else:
+    #     right_stream_down = get_right_stream_down(grid, y, x)
+
     curr_x = x
     while True:
         if curr_x >= grid.shape[1]:
@@ -163,7 +108,14 @@ def get_right_stream_down(grid, y, x):
     return curr_x
 
 
-def get_left_stream_down(grid, y, x):
+def get_left_stream_down(grid, y, x, cache):
+    # if (y, x) in cache['left_stream_down']:
+    #     left_stream_down = get_left_stream_down(grid, y, x)
+    # else:
+    #     left_stream_down = get_left_stream_down(grid, y, x)
+    #     cache['left_stream_down'][(y, x)] = left_stream_down
+
+
     curr_x = x
     while True:
         if curr_x < 0:
@@ -196,8 +148,6 @@ def tick(grid, cache):
     for y, x in zip(*puddle_to_spread):
         if (y, x) in cache['puddle_to_spread']:
             continue
-        #     todo: cache too agressive, something messed up
-        cache['puddle_to_spread'].add((y, x))
 
         right_border = get_right_border(grid, y, x)
         left_border = get_left_border(grid, y, x)
@@ -206,7 +156,8 @@ def tick(grid, cache):
 
         first_clay_right_x = right_border
         first_clay_left_x = left_border
-        grid[y, first_clay_left_x:first_clay_right_x+1] = PUDDLE
+        grid[y, first_clay_left_x:first_clay_right_x + 1] = PUDDLE
+        cache['puddle_to_spread'].add((y, x))
 
     # falling water spreading to sides
     water_to_spread = np.where((grid == WATER) & (np.isin(np.roll(grid, -1, axis=0), [CLAY, PUDDLE])))
@@ -214,7 +165,6 @@ def tick(grid, cache):
     for y, x in zip(*water_to_spread):
         if (y, x) in cache['water_to_spread']:
             continue
-        cache['water_to_spread'].add((y, x))
 
         right_border = get_right_border(grid, y, x)
         left_border = get_left_border(grid, y, x)
@@ -225,6 +175,7 @@ def tick(grid, cache):
         left_stream_down = get_left_stream_down(grid, y, x)
         # this finds streams from different water, I must check proximity, probably?
         if right_stream_down is not None or left_stream_down is not None:
+            # cache['water_to_spread'].add((y, x))
             continue  # already evaluated stream
 
         right_hole = np.where((grid[y, x:] == FREE) & (np.isin(grid[y + 1, x:], [FREE])))[0]
@@ -241,6 +192,7 @@ def tick(grid, cache):
         if left_border is not None:
             first_clay_left_x = max(left_border, first_clay_left_x)
         grid[y, first_clay_left_x:first_clay_right_x] = WATER
+        cache['water_to_spread'].add((y, x))
 
     # working filling part of first bowl
     return grid, cache
@@ -261,7 +213,7 @@ def part_1():
     old_grid = old_grid[:, :]
     i = 0
 
-    cache = {'water_to_spread': set(), 'puddle_to_spread': set()}
+    cache = {'water_to_spread': set(), 'puddle_to_spread': set(), 'left_stream_down': dict(), 'right_stream_down': dict()}
 
     while True:
         new_grid, cache = tick(old_grid.copy(), cache)
@@ -273,8 +225,11 @@ def part_1():
         old_grid = new_grid
         i += 1
     print(np.sum(np.isin(new_grid, [WATER, PUDDLE])) - 1)  # - 1 for spring
-# 5054 is too low
 
+
+# 5054 is too low
+# 4695
+# 53.830594062805176
 def part_2():
     pass
 
