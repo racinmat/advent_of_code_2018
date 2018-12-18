@@ -248,6 +248,7 @@ def part_1():
              'right_stream_down': dict(), 'left_border': dict(), 'right_border': dict()}
 
     while True:
+        # instead of iterating through "time", use stack of water ends
         new_grid, cache = tick(old_grid.copy(), cache)
         # print_grid(new_grid)
         grid_to_save = new_grid
