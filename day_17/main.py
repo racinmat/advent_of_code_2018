@@ -195,25 +195,28 @@ def tick(grid, cache):
 
         right_stream_down = get_right_stream_down(grid, y, x, cache)
         left_stream_down = get_left_stream_down(grid, y, x, cache)
-        # this finds streams from different water, I must check proximity, probably?
-        if right_stream_down is not None or left_stream_down is not None:
-            # cache['water_to_spread'].add((y, x))
-            continue  # already evaluated stream
 
-        right_hole = np.where((grid[y, x:] == FREE) & (np.isin(grid[y + 1, x:], [FREE])))[0]
-        left_hole = np.where((grid[y, :x] == FREE) & (np.isin(grid[y + 1, :x], [FREE])))[0]
-        first_clay_right_x = grid.shape[1]
-        if len(right_hole) > 0:
-            first_clay_right_x = min(first_clay_right_x, x + min((right_hole + 1).tolist()))  # exclusive to inclusive
-        if right_border is not None:
-            first_clay_right_x = min(right_border + 1, first_clay_right_x)
+        # to be more robust, will solve left and right separately
+        if right_stream_down is None:
+            # creating right stream down
+            right_hole = np.where((grid[y, x:] == FREE) & (np.isin(grid[y + 1, x:], [FREE])))[0]
+            first_clay_right_x = grid.shape[1]
+            if len(right_hole) > 0:
+                first_clay_right_x = min(first_clay_right_x, x + min((right_hole + 1).tolist()))  # exclusive to inclusive
+            if right_border is not None:
+                first_clay_right_x = min(right_border + 1, first_clay_right_x)
+            grid[y, x:first_clay_right_x] = WATER
 
-        first_clay_left_x = 0
-        if len(left_hole) > 0:
-            first_clay_left_x = max(first_clay_left_x, max(left_hole.tolist()))
-        if left_border is not None:
-            first_clay_left_x = max(left_border, first_clay_left_x)
-        grid[y, first_clay_left_x:first_clay_right_x] = WATER
+        if left_stream_down is None:
+            # creating left stream down
+            left_hole = np.where((grid[y, :x] == FREE) & (np.isin(grid[y + 1, :x], [FREE])))[0]
+            first_clay_left_x = 0
+            if len(left_hole) > 0:
+                first_clay_left_x = max(first_clay_left_x, max(left_hole.tolist()))
+            if left_border is not None:
+                first_clay_left_x = max(left_border, first_clay_left_x)
+            grid[y, first_clay_left_x:x] = WATER
+
         cache['water_to_spread'].add((y, x))
 
     # working filling part of first bowl
@@ -232,7 +235,7 @@ def print_grid(grid):
 
 def part_1():
     old_grid = prepare_data()
-    old_grid = old_grid[:500, :]
+    old_grid = old_grid[:, :]
     i = 0
 
     cache = {'water_to_spread': set(), 'puddle_to_spread': set(), 'left_stream_down': dict(),
@@ -251,7 +254,7 @@ def part_1():
 
 
 # 31547 too low
-
+# 31608 too low
 def part_2():
     pass
 
