@@ -61,7 +61,13 @@ def prepare_data():
     return grid
 
 
-def get_right_border(grid, y, x):
+def get_right_border(grid, y, x, cache):
+    if (y, x) in cache['right_border']:
+        right_border = cache['right_border'][(y, x)]
+        # check cached solution and check if stream is still here
+        if np.all(np.isin(grid[y+1, x:right_border], [CLAY, PUDDLE])) and grid[y, right_border + 1] == CLAY:
+            return right_border
+
     curr_x = x
     while True:
         if curr_x >= grid.shape[1]:
@@ -71,10 +77,17 @@ def get_right_border(grid, y, x):
         if grid[y, curr_x + 1] == CLAY:
             break
         curr_x += 1
+    cache['right_border'][(y, x)] = curr_x
     return curr_x
 
 
-def get_left_border(grid, y, x):
+def get_left_border(grid, y, x, cache):
+    if (y, x) in cache['left_border']:
+        left_border = cache['left_border'][(y, x)]
+        # check cached solution and check if stream is still here
+        if np.all(np.isin(grid[y+1, left_border:x], [CLAY, PUDDLE])) and grid[y, left_border - 1] == CLAY:
+            return left_border
+
     curr_x = x
     while True:
         if curr_x < 0:
@@ -84,6 +97,7 @@ def get_left_border(grid, y, x):
         if grid[y, curr_x - 1] == CLAY:
             break
         curr_x -= 1
+    cache['left_border'][(y, x)] = curr_x
     return curr_x
 
 
@@ -151,8 +165,8 @@ def tick(grid, cache):
         if (y, x) in cache['puddle_to_spread']:
             continue
 
-        right_border = get_right_border(grid, y, x)
-        left_border = get_left_border(grid, y, x)
+        right_border = get_right_border(grid, y, x, cache)
+        left_border = get_left_border(grid, y, x, cache)
         if right_border is None or left_border is None:
             continue  # nowhere to spread, hole somewhere
 
@@ -168,8 +182,8 @@ def tick(grid, cache):
         if (y, x) in cache['water_to_spread']:
             continue
 
-        right_border = get_right_border(grid, y, x)
-        left_border = get_left_border(grid, y, x)
+        right_border = get_right_border(grid, y, x, cache)
+        left_border = get_left_border(grid, y, x, cache)
         if right_border is not None and left_border is not None:
             continue  # earlier case, should spread puddle
 
@@ -212,10 +226,11 @@ def print_grid(grid):
 
 def part_1():
     old_grid = prepare_data()
-    old_grid = old_grid[:500, :]
+    old_grid = old_grid[:, :]
     i = 0
 
-    cache = {'water_to_spread': set(), 'puddle_to_spread': set(), 'left_stream_down': dict(), 'right_stream_down': dict()}
+    cache = {'water_to_spread': set(), 'puddle_to_spread': set(), 'left_stream_down': dict(),
+             'right_stream_down': dict(), 'left_border': dict(), 'right_border': dict()}
 
     while True:
         new_grid, cache = tick(old_grid.copy(), cache)
@@ -228,8 +243,6 @@ def part_1():
         i += 1
     print(np.sum(np.isin(new_grid, [WATER, PUDDLE])) - 1)  # - 1 for spring
 
-
-# 5054 is too low
 
 def part_2():
     pass
