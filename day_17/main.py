@@ -43,17 +43,23 @@ def load_input():
 def prepare_data():
     clays = load_input()
     # normalize clays x
-    x_min = min([min(c['x']) if isinstance(c['x'], range) else c['x'] for c in clays])
+    # -1 to have 1 free column for overflow
+    x_min = min([min(c['x']) if isinstance(c['x'], range) else c['x'] for c in clays]) - 1
+    y_min = min([min(c['y']) if isinstance(c['y'], range) else c['y'] for c in clays]) - 1
     for c in clays:
         if isinstance(c['x'], range):
             c['x'] = range(c['x'].start - x_min, c['x'].stop - x_min)
         else:
             c['x'] -= x_min
+        if isinstance(c['y'], range):
+            c['y'] = range(c['y'].start - y_min, c['y'].stop - y_min)
+        else:
+            c['y'] -= y_min
 
     x_max = max([max(c['x']) if isinstance(c['x'], range) else c['x'] for c in clays])
     y_max = max([max(c['y']) if isinstance(c['y'], range) else c['y'] for c in clays])
 
-    grid = np.ones((y_max + 1, x_max + 1)) * FREE
+    grid = np.ones((y_max + 1, x_max + 2)) * FREE   # to have 1 padding on right side
     for c in clays:
         grid[c['y'], c['x']] = CLAY
 
@@ -253,10 +259,24 @@ def part_1():
     print(np.sum(np.isin(new_grid, [WATER, PUDDLE])) - 1)  # - 1 for spring
 
 
-# 31547 too low
-# 31608 too low
 def part_2():
-    pass
+    old_grid = prepare_data()
+    old_grid = old_grid[:, :]
+    i = 0
+
+    cache = {'water_to_spread': set(), 'puddle_to_spread': set(), 'left_stream_down': dict(),
+             'right_stream_down': dict(), 'left_border': dict(), 'right_border': dict()}
+
+    while True:
+        new_grid, cache = tick(old_grid.copy(), cache)
+        # print_grid(new_grid)
+        grid_to_save = new_grid
+        Image.fromarray(((grid_to_save / grid_to_save.max()) * 255).astype(np.uint8)).save('im-{}.png'.format(i))
+        if np.allclose(old_grid, new_grid):
+            break
+        old_grid = new_grid
+        i += 1
+    print(np.sum(np.isin(new_grid, [PUDDLE])))
 
 
 if __name__ == '__main__':
@@ -264,7 +284,7 @@ if __name__ == '__main__':
 
     start = time()
 
-    part_1()
+    # part_1()
     part_2()
 
     print(time() - start)
