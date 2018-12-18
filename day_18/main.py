@@ -8,9 +8,10 @@ OPEN = 0
 
 MIDDLE = 137
 
+
 def load_data():
     lines_array = []
-    with open('test_input.txt', encoding='utf-8') as lines:
+    with open('input.txt', encoding='utf-8') as lines:
         for line in lines:
             lines_array.append(list(line.replace('\n', '')))
     string_map = np.array(lines_array)
@@ -21,7 +22,7 @@ def load_data():
     return grid
 
 
-def apply_rules_for_generation_conv(grid, matches):
+def apply_rules_for_generation_conv(grid):
     new_gen_grid = grid.copy()
     # new_gen_grid = np.zeros_like(grid)
     # new_gen_grid[grid == LUMBER] = LUMBER   # lumber is set now and replaced later
@@ -37,27 +38,35 @@ def apply_rules_for_generation_conv(grid, matches):
     ])
     # todo: add options to all others (any number of trees for lumbers check, any number of lumbers for tree check...)
     # rules are symmetric and thus flip invariant, no need for flipping
-    conv_res = signal.convolve2d(grid, rule, mode='same')
+    # conv_res = signal.convolve2d(grid, rule, mode='same')
+    conv_res = ndimage.convolve(grid, rule, mode='constant')
+    #
+    # conv_res = signal.fftconvolve(grid, rule, mode='same')
+
     middle_pos, around = np.divmod(conv_res, MIDDLE)
     around_lumbers, around_trees = np.divmod(around, LUMBER)
+    around_trees = np.round(around_trees / TREE).astype(np.int32)
     # 1)
     # big magic with coprimes and modulo, muhaha
-    indices = np.where((middle_pos == OPEN) & (around_trees >= TREE * 3) & (around < MIDDLE))
+    should_appear_tree = (middle_pos == OPEN) & (around_trees >= 3)
+    indices = np.where(should_appear_tree)
     new_gen_grid[indices] = TREE
 
     # 2)
-    indices = np.where((middle_pos == TREE) & (around_trees >= TREE * 3) & (around < MIDDLE))
+    should_appear_lumber = (middle_pos == TREE) & (around_lumbers >= 3)
+    indices = np.where(should_appear_lumber)
     new_gen_grid[indices] = LUMBER
 
     # 3)
-    indices = np.where((middle_pos == LUMBER) & ((around_lumbers < 1) | (around_trees < TREE)))
+    should_appear_open = (middle_pos == LUMBER) & ((around_lumbers < 1) | (around_trees < 1))
+    indices = np.where(should_appear_open)
     new_gen_grid[indices] = OPEN
 
     return new_gen_grid
 
 
-def calc_next_generation(grid, matches):
-    new_gen_grid = apply_rules_for_generation_conv(grid, matches)
+def calc_next_generation(grid):
+    new_gen_grid = apply_rules_for_generation_conv(grid)
     return new_gen_grid
 
 
@@ -108,39 +117,62 @@ def find_smallest_usable_coprimes():
     print(diffs)
 
 
+def generate_values(grid):
+    values = []
+    # print_grid(grid)
+    values.append(np.sum(grid == TREE) * np.sum(grid == LUMBER))
+    for i in range(0, 8000):
+        grid = calc_next_generation(grid)
+        value = np.sum(grid == TREE) * np.sum(grid == LUMBER)
+        values.append(value)
+
+    return values
+
+
+def calc_value(iteration, grid):
+    x_offset = 1000
+
+    if iteration < x_offset:
+        # print_grid(grid)
+        for i in range(0, iteration):
+            grid = calc_next_generation(grid)
+            # print_grid(grid)
+        return np.sum(grid == TREE) * np.sum(grid == LUMBER)
+
+    period = 28
+    series = [174420, 179800, 182590, 189630, 196452, 205000, 210789, 218240, 222824, 231336, 236155, 240482, 237636,
+              237082, 234938, 237900, 232232, 228274, 220584, 216752, 206702, 199824, 178100, 175587, 169880, 173014,
+              171248, 174782]
+    value = series[(iteration - x_offset) % period]
+    return value
+
+
 def part_1():
     # find_smallest_usable_coprimes()
 
-    matches = [
-        np.array([TREE * 3, TREE * 4, TREE * 5, TREE * 6, TREE * 7, TREE * 8]),
-        np.array([LUMBER * 3, LUMBER * 4, LUMBER * 5, LUMBER * 6, LUMBER * 7, LUMBER * 8]) + TREE * 100,
-        np.array([0, LUMBER * 1, LUMBER * 2, LUMBER * 3, LUMBER * 4, LUMBER * 5, LUMBER * 6, LUMBER * 7, LUMBER * 8,
-                  TREE * 1, TREE * 2,TREE * 3, TREE * 4, TREE * 5, TREE * 6, TREE * 7, TREE * 8]) + LUMBER * 100,
-        # todo: vymyslet nerovnost, asi, míésto téhle šílenosti
-    ]
-
     grid = load_data()
-    print_grid(grid)
-    for i in range(0, 10):
-        grid = calc_next_generation(grid, matches)
-        print_grid(grid)
-    print(np.sum(grid == TREE))
-    print(np.sum(grid == LUMBER))
-    print(np.sum(grid == TREE) * np.sum(grid == LUMBER))
+    value = calc_value(10, grid)
+    print(value)
 
 
+# 179800 too high
 def part_2():
-    print(calc_generation_sum(50000000000))
-    # print(calc_generation_sum(200))
-    # diff_sums = get_diff_sums()
+    # consistency check
+    grid = load_data()
+    all_values = generate_values(grid.copy())
+    values = all_values[700:]
+    modeled_values = [calc_value(i, grid.copy()) for i in range(700, 8000)]
+    print(np.allclose(values, modeled_values))
+
+    # print(calc_value(1000000000))
+
+    # values = generate_values()
+
     # import matplotlib.pyplot as plt
-    # # plt.plot(np.arange(0, len(diff_sums), 1), diff_sums)
-    # plt.plot(np.arange(0, len(diff_sums) - 1, 1), np.diff(diff_sums))
+    # plt.plot(np.arange(0, len(values), 1), values)
+    # # plt.plot(np.arange(0, len(values) - 1, 1), np.diff(diff_sums))
     # plt.show()
-    # print(np.bincount(diff_sums))
-    # plants_indices = np.where(plants == 1)[0] + total_offset
-    # total_sum = np.sum(plants_indices)
-    # print(total_sum)
+    print()
 
 
 if __name__ == '__main__':
