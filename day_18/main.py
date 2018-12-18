@@ -1,11 +1,12 @@
 import numpy as np
 from scipy import signal, ndimage
 
-# 2 and 9 are distinguishable from each other for convolution on range 0-8
+# 2, 7 and 137 are distinguishable from each other for convolution on range 0-8
 TREE = 2
-LUMBER = 9
+LUMBER = 17
 OPEN = 0
 
+MIDDLE = 137
 
 def load_data():
     lines_array = []
@@ -20,40 +21,43 @@ def load_data():
     return grid
 
 
-def apply_rules_for_generation_conv(grid):
+def apply_rules_for_generation_conv(grid, matches):
     new_gen_grid = grid.copy()
+    # new_gen_grid = np.zeros_like(grid)
+    # new_gen_grid[grid == LUMBER] = LUMBER   # lumber is set now and replaced later
+
     # 1) open with 3 or more trees around -> tree
     # 2) tree with 3 or more lumbers -> lumber
     # 3) lumber with no tree and no lumber around -> open
 
     rule = np.array([
         [1, 1, 1],
-        [1, 100, 1],
+        [1, MIDDLE, 1],
         [1, 1, 1],
     ])
-    conv_res = signal.convolve2d(grid, rule, mode='valid')
-
-    # 1)
-    matches = np.array([TREE * 3, TREE * 4, TREE * 5, TREE * 6, TREE * 7, TREE * 8])
+    # todo: add options to all others (any number of trees for lumbers check, any number of lumbers for tree check...)
     # rules are symmetric and thus flip invariant, no need for flipping
-    indices = np.where(np.isin(conv_res, matches))
+    conv_res = signal.convolve2d(grid, rule, mode='same')
+    middle_pos, around = np.divmod(conv_res, MIDDLE)
+    around_lumbers, around_trees = np.divmod(around, LUMBER)
+    # 1)
+    # big magic with coprimes and modulo, muhaha
+    indices = np.where((middle_pos == OPEN) & (around_trees >= TREE * 3) & (around < MIDDLE))
     new_gen_grid[indices] = TREE
 
     # 2)
-    matches = np.array([LUMBER * 3, LUMBER * 4, LUMBER * 5, LUMBER * 6, LUMBER * 7, LUMBER * 8]) + LUMBER * 100
-    indices = np.where(np.isin(conv_res, matches))
+    indices = np.where((middle_pos == TREE) & (around_trees >= TREE * 3) & (around < MIDDLE))
     new_gen_grid[indices] = LUMBER
 
     # 3)
-    matches = np.array([100, 100 + LUMBER, 100 + TREE])
-    indices = np.where(np.isin(conv_res, matches))
+    indices = np.where((middle_pos == LUMBER) & ((around_lumbers < 1) | (around_trees < TREE)))
     new_gen_grid[indices] = OPEN
 
     return new_gen_grid
 
 
-def calc_next_generation(grid):
-    new_gen_grid = apply_rules_for_generation_conv(grid)
+def calc_next_generation(grid, matches):
+    new_gen_grid = apply_rules_for_generation_conv(grid, matches)
     return new_gen_grid
 
 
@@ -75,13 +79,29 @@ def print_grid(grid):
 
 
 def find_smallest_usable_coprimes():
+    # feasibles = []
+    # options = np.arange(1, 9, 1)
+    # for i in range(1, 20):
+    #     for j in range(i, 20):
+    #         # if len(set(options * i).intersection(set(options * j))) <= 1:
+    #         #     print(i, j, 'feasible coprimes')
+    #         #     feasibles.append([i, j])
+    #         if max(options * i) < min(options * j):
+    #             print(i, j, 'feasible coprimes')
+    #             feasibles.append([i, j])
+    # feasibles = np.array(feasibles)
+    # diffs = np.abs(feasibles[:, 0] - feasibles[:, 1])
+    # print(feasibles)
+    # print(diffs)
+
     feasibles = []
-    options = np.arange(0, 9, 1)
-    for i in range(1, 20):
-        for j in range(i, 20):
-            if len(set(options * i).intersection(set(options * j))) <= 1:
-                print(i, j, 'feasible coprimes')
-                feasibles.append([i, j])
+    options = np.arange(1, 9, 1)
+    for i in range(1, 200):
+        for j in range(i, 200):
+            for k in range(j, 200):
+                if max(options * i) < min(options * j) and max(options * j) < min(options * k):
+                    print(i, j, k, 'feasible coprimes')
+                    feasibles.append([i, j, k])
     feasibles = np.array(feasibles)
     diffs = np.abs(feasibles[:, 0] - feasibles[:, 1])
     print(feasibles)
@@ -91,10 +111,21 @@ def find_smallest_usable_coprimes():
 def part_1():
     # find_smallest_usable_coprimes()
 
+    matches = [
+        np.array([TREE * 3, TREE * 4, TREE * 5, TREE * 6, TREE * 7, TREE * 8]),
+        np.array([LUMBER * 3, LUMBER * 4, LUMBER * 5, LUMBER * 6, LUMBER * 7, LUMBER * 8]) + TREE * 100,
+        np.array([0, LUMBER * 1, LUMBER * 2, LUMBER * 3, LUMBER * 4, LUMBER * 5, LUMBER * 6, LUMBER * 7, LUMBER * 8,
+                  TREE * 1, TREE * 2,TREE * 3, TREE * 4, TREE * 5, TREE * 6, TREE * 7, TREE * 8]) + LUMBER * 100,
+        # todo: vymyslet nerovnost, asi, míésto téhle šílenosti
+    ]
+
     grid = load_data()
+    print_grid(grid)
     for i in range(0, 10):
-        grid = calc_next_generation(grid)
+        grid = calc_next_generation(grid, matches)
         print_grid(grid)
+    print(np.sum(grid == TREE))
+    print(np.sum(grid == LUMBER))
     print(np.sum(grid == TREE) * np.sum(grid == LUMBER))
 
 
