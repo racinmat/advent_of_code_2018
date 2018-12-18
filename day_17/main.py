@@ -88,10 +88,11 @@ def get_left_border(grid, y, x):
 
 
 def get_right_stream_down(grid, y, x, cache):
-    # if (y, x) in cache['right_stream_down']:
-    #     continue
-    # else:
-    #     right_stream_down = get_right_stream_down(grid, y, x)
+    if (y, x) in cache['right_stream_down']:
+        left_stream_down = cache['right_stream_down'][(y, x)]
+        # check cached solution and check if stream is still here
+        if grid[y, left_stream_down] == WATER and grid[y + 1, left_stream_down] == WATER:
+            return left_stream_down
 
     curr_x = x
     while True:
@@ -105,16 +106,16 @@ def get_right_stream_down(grid, y, x, cache):
         if np.isin(grid[y + 1, curr_x], [FREE, WATER]) or np.isin(grid[y, curr_x], [CLAY, PUDDLE]):
             return None
         curr_x += 1
+    cache['right_stream_down'][(y, x)] = curr_x
     return curr_x
 
 
 def get_left_stream_down(grid, y, x, cache):
-    # if (y, x) in cache['left_stream_down']:
-    #     left_stream_down = get_left_stream_down(grid, y, x)
-    # else:
-    #     left_stream_down = get_left_stream_down(grid, y, x)
-    #     cache['left_stream_down'][(y, x)] = left_stream_down
-
+    if (y, x) in cache['left_stream_down']:
+        left_stream_down = cache['left_stream_down'][(y, x)]
+        # check cached solution and check if stream is still here
+        if grid[y, left_stream_down] == WATER and grid[y + 1, left_stream_down] == WATER:
+            return left_stream_down
 
     curr_x = x
     while True:
@@ -128,6 +129,7 @@ def get_left_stream_down(grid, y, x, cache):
         if np.isin(grid[y + 1, curr_x], [FREE, WATER]) or np.isin(grid[y, curr_x], [CLAY, PUDDLE]):
             return None
         curr_x -= 1
+    cache['left_stream_down'][(y, x)] = curr_x
     return curr_x
 
 
@@ -171,8 +173,8 @@ def tick(grid, cache):
         if right_border is not None and left_border is not None:
             continue  # earlier case, should spread puddle
 
-        right_stream_down = get_right_stream_down(grid, y, x)
-        left_stream_down = get_left_stream_down(grid, y, x)
+        right_stream_down = get_right_stream_down(grid, y, x, cache)
+        left_stream_down = get_left_stream_down(grid, y, x, cache)
         # this finds streams from different water, I must check proximity, probably?
         if right_stream_down is not None or left_stream_down is not None:
             # cache['water_to_spread'].add((y, x))
@@ -210,7 +212,7 @@ def print_grid(grid):
 
 def part_1():
     old_grid = prepare_data()
-    old_grid = old_grid[:, :]
+    old_grid = old_grid[:500, :]
     i = 0
 
     cache = {'water_to_spread': set(), 'puddle_to_spread': set(), 'left_stream_down': dict(), 'right_stream_down': dict()}
@@ -228,8 +230,7 @@ def part_1():
 
 
 # 5054 is too low
-# 4695
-# 53.830594062805176
+
 def part_2():
     pass
 
