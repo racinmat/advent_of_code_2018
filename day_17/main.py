@@ -151,7 +151,7 @@ def tick(grid, cache):
     # water falling down
     water_to_fall = np.where((grid == WATER) & (np.roll(grid, -1, axis=0) == FREE))
     for y, x in zip(*water_to_fall):
-        floors = y + np.where(grid[y:, x] == CLAY)[0]
+        floors = y + np.where(np.isin(grid[y:, x], [CLAY, PUDDLE]))[0]
         if len(floors) == 0:
             # hit the bottom
             grid[y:, x] = WATER
@@ -226,7 +226,7 @@ def print_grid(grid):
 
 def part_1():
     old_grid = prepare_data()
-    old_grid = old_grid[:, :]
+    old_grid = old_grid[:300, :]
     i = 0
 
     cache = {'water_to_spread': set(), 'puddle_to_spread': set(), 'left_stream_down': dict(),
@@ -243,7 +243,10 @@ def part_1():
         i += 1
     print(np.sum(np.isin(new_grid, [WATER, PUDDLE])) - 1)  # - 1 for spring
 
+# 31547 too low
 
+# 4695
+# 30.12916374206543
 def part_2():
     pass
 
