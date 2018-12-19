@@ -228,7 +228,7 @@ def part_2():
     # row 9  r[1] = 1 if r[4] > r[5] else 0
     # row 10 goto row 11 + r[1]
     # row 11 goto row 2
-    # row 12 r[2] = r[2] + 1
+    # row 12 r[2] += 1
     # row 13 r[1] = 1 if r[2] > r[5] else 0
     # row 14 goto row 15 + r[1]
     # row 15 goto row 2
