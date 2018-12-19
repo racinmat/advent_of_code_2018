@@ -158,9 +158,9 @@ def get_valid_instructions(change_log, instructions):
 
 
 def part_1():
-    ip_pos, program, instructions = prepare_data()
+    # ip_pos, program, instructions = prepare_data()
 
-    ip = 0
+    # ip = 0
     registry = [0, 0, 0, 0, 0, 0]
     # while ip < len(program):
     #     line = program[ip]
@@ -169,7 +169,7 @@ def part_1():
     #     registry = instructions[instr_name](params, registry)
     #     ip = registry[ip_pos]
     #     ip += 1
-        # print(registry)
+    #     print(registry)
     # [1374, 1, 915, 256, 915, 914]
     registry = program_in_python(registry)
     print(registry)
@@ -202,7 +202,7 @@ def program_in_python(r):
     row 25 goto row 26 + r[0]   # r[0] is either 0 or 1 now
     row 26 goto row 1
     rows 27-33
-    r[1] = 27 * 28 + 59 * 14 * 32
+    r[1] = (27 * 28 + 29) * 30 * 14 * 32
     r[5] += r[1]
     row 34 r[0] = 0
     row 35 goto row 1
@@ -230,24 +230,30 @@ def program_in_python(r):
     r[1] = (r[1] + 3) * 22 + 12
     r[5] = (r[5] + 2) ** 2 * 19 * 11 + r[1]
     if r[0] == 1:
-        r[1] = 27 * 28 + 59 * 14 * 32
+        r[1] = (27 * 28 + 29) * 30 * 14 * 32
         r[5] += r[1]
         r[0] = 0
 
     r[2] = 1
     while r[2] <= r[5]:
-        r[4] = 1
-        while r[4] <= r[5]:
-            r[1] = r[2] * r[4]
-            if r[1] == r[5]:
-                r[0] += r[2]
-            r[4] += 1
+        # r[4] = 1
+        # while r[4] <= r[5]:
+        #     if r[2] * r[4] == r[5]:
+        #         r[0] += r[2]
+        #         # break   # because if won't be true twice in a inner loop
+        #     r[4] += 1
+        # optimizing inner loop, r[2] is constant for the whole loop
+        r4, remainder = divmod(r[5], r[2])
+        if remainder == 0:
+            r[0] += r[2]
         r[2] += 1
     return r
 
 
 # 0 wrong
 # 10551314 wrong
+# 42156 too low
+
 def part_2():
     """
     row 0  r[3] = r[3] + 16
@@ -280,7 +286,7 @@ def part_2():
     row 27 r[1] = r[3]
     row 28 r[1] = r[1] * r[3]
     row 29 r[1] = r[3] + r[1]
-    row 30 r[1] = r[3] + r[1]
+    row 30 r[1] = r[3] * r[1]
     row 31 r[1] = r[1] * 14
     row 32 r[1] = r[1] * r[3]
     row 33 r[5] = r[5] + r[1]
@@ -320,7 +326,7 @@ def part_2():
     row 27 r[1] = 27
     row 28 r[1] *= 28
     row 29 r[1] += 29
-    row 30 r[1] += 30
+    row 30 r[1] *= 30
     row 31 r[1] *= 14
     row 32 r[1] *= 32
     row 33 r[5] += r[1]
@@ -330,25 +336,25 @@ def part_2():
 
     ip_pos, program, instructions = prepare_data()
 
-    ip = 0
+    # ip = 0
     registry = [1, 0, 0, 0, 0, 0]
-    count = 0
+    # count = 0
     # ips = [ip]
     # reg0s = [0]
-    while ip < len(program):
-        line = program[ip]
-        registry[ip_pos] = ip
-        instr_name, params = line
-        registry = instructions[instr_name](params, registry)
-        ip = registry[ip_pos]
-        ip += 1
-        count += 1
-        # ips.append(ip)
-        # reg0s.append(registry[0])
-        if count % 10000000 == 0:
-            print(registry)
-        # if count > 1000:
-        #     break
+    # while ip < len(program):
+    #     line = program[ip]
+    #     registry[ip_pos] = ip
+    #     instr_name, params = line
+    #     registry = instructions[instr_name](params, registry)
+    #     ip = registry[ip_pos]
+    #     ip += 1
+    #     count += 1
+    #     # ips.append(ip)
+    #     # reg0s.append(registry[0])
+    #     if count % 10000000 == 0:
+    #         print(registry)
+    #     # if count > 1000:
+    #     #     break
 
     # import numpy as np
     # import matplotlib.pyplot as plt
@@ -357,6 +363,8 @@ def part_2():
     # plt.plot(np.arange(0, len(reg0s), 1), reg0s)
     # # plt.plot(np.arange(0, len(values) - 1, 1), np.diff(diff_sums))
     # plt.show()
+
+    registry = program_in_python(registry)
 
     print(registry)
 
@@ -367,6 +375,6 @@ if __name__ == '__main__':
     start = time()
 
     part_1()
-    # part_2()
+    part_2()
 
     print(time() - start)
