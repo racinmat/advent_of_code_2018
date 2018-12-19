@@ -176,14 +176,89 @@ def part_1():
     print(ip, registry)
 
 
+# 0 wrong
 def part_2():
+    # row 0  r[3] = r[3] + 16
+    # row 1  r[2] = 1
+    # row 2  r[4] = 1
+    # row 3  r[1] = r[2] * r[4]
+    # row 4  r[1] = 1 if r[1] == r[5] else 0
+    # row 5  r[3] = r[1] + r[3]
+    # row 6  r[3] = r[3] + 1
+    # row 7  r[0] = r[2] + r[0]
+    # row 8  r[4] = r[4] + 1
+    # row 9  r[1] = 1 if r[4] > r[5] else 0
+    # row 10 r[3] = r[3] + r[1]
+    # row 11 r[3] = 2
+    # row 12 r[2] = r[2] + 1
+    # row 13 r[1] = 1 if r[2] > r[5] else 0
+    # row 14 r[3] = r[1] + r[3]
+    # row 15 r[3] = 1
+    # row 16 r[3] = r[3] * r[3]
+    # row 17 r[5] = r[5] + 2
+    # row 18 r[5] = r[5] * r[5]
+    # row 19 r[5] = r[3] * r[5]
+    # row 20 r[5] = r[5] * 11
+    # row 21 r[1] = r[1] + 3
+    # row 22 r[1] = r[1] * r[3]
+    # row 23 r[1] = r[1] + 12
+    # row 24 r[5] = r[5] + r[1]
+    # row 25 r[3] = r[3] + r[0]
+    # row 26 r[3] = 0
+    # row 27 r[1] = r[3]
+    # row 28 r[1] = r[1] * r[3]
+    # row 29 r[1] = r[3] + r[1]
+    # row 30 r[1] = r[3] + r[1]
+    # row 31 r[1] = r[1] * 14
+    # row 32 r[1] = r[1] * r[3]
+    # row 33 r[5] = r[5] + r[1]
+    # row 34 r[0] = 0
+    # row 35 r[3] = 0
+
+    # init: [1, 0, 0, 0, 0, 0]
+    # row 0  goto row 16 + 1
+    # row 1  r[2] = 1
+    # row 2  r[4] = 1
+    # row 3  r[1] = r[2] * r[4]
+    # row 4  r[1] = 1 if r[1] == r[5] else 0
+    # row 5  goto row 5 + r[1] + 1
+    # row 6  goto row 6 + 1 + 1
+    # row 7  r[0] = r[2] + r[0]
+    # row 8  r[4] = r[4] + 1
+    # row 9  r[1] = 1 if r[4] > r[5] else 0
+    # row 10 goto row 10 + r[1] + 1
+    # row 11 goto row 2
+    # row 12 r[2] = r[2] + 1
+    # row 13 r[1] = 1 if r[2] > r[5] else 0
+    # row 14 goto row 14 + r[1] + 1
+    # row 15 goto row 1 + 1
+    # row 16 goto row 16 * 16 + 1
+    # row 17 r[5] = r[5] + 2
+    # row 18 r[5] = r[5] * r[5]
+    # row 19 r[5] = 19 * r[5]
+    # row 20 r[5] = r[5] * 11
+    # row 21 r[1] = r[1] + 3
+    # row 22 r[1] = r[1] * 22
+    # row 23 r[1] = r[1] + 12
+    # row 24 r[5] = r[5] + r[1]
+    # row 25 goto row 25 + r[0] + 1
+    # row 26 goto row 1
+    # row 27 r[1] = 27
+    # row 28 r[1] = r[1] * 28
+    # row 29 r[1] = 29 + r[1]
+    # row 30 r[1] = 30 + r[1]
+    # row 31 r[1] = r[1] * 14
+    # row 32 r[1] = r[1] * 32
+    # row 33 r[5] = r[5] + r[1]
+    # row 34 r[0] = 0
+    # row 35 goto row 1
     ip_pos, program, instructions = prepare_data()
 
     ip = 0
     registry = [1, 0, 0, 0, 0, 0]
     count = 0
-    ips = [ip]
-    reg0s = [0]
+    # ips = [ip]
+    # reg0s = [0]
     while ip < len(program):
         line = program[ip]
         registry[ip_pos] = ip
@@ -192,16 +267,20 @@ def part_2():
         ip = registry[ip_pos]
         ip += 1
         count += 1
-        ips.append(ip)
-        # print(ip, registry)
-        if count > 500:
-            break
+        # ips.append(ip)
+        # reg0s.append(registry[0])
+        if count % 10000000 == 0:
+            print(ip, registry)
+        # if count > 1000:
+        #     break
 
-    import numpy as np
-    import matplotlib.pyplot as plt
-    plt.plot(np.arange(0, len(ips), 1), ips)
-    # plt.plot(np.arange(0, len(values) - 1, 1), np.diff(diff_sums))
-    plt.show()
+    # import numpy as np
+    # import matplotlib.pyplot as plt
+    # plt.plot(np.arange(0, len(ips), 1), ips)
+    # plt.show()
+    # plt.plot(np.arange(0, len(reg0s), 1), reg0s)
+    # # plt.plot(np.arange(0, len(values) - 1, 1), np.diff(diff_sums))
+    # plt.show()
 
     print(ip, registry)
 
