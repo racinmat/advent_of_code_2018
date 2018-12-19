@@ -219,7 +219,7 @@ def part_2():
     # row 0  goto row 17
     # row 1  r[2] = 1
     # row 2  r[4] = 1
-    # row 3  r[1] = 1
+    # row 3  r[1] = r[2] * r[4]
     # row 4  --
     # row 5  if r[1] == r[5] goto row 7 else goto row 8
     # row 6  --
@@ -241,6 +241,40 @@ def part_2():
     # row 22 r[1] *= 22
     # row 23 r[1] += 12
     # row 24 r[5] += r[1]
+    # row 25 goto row 26 + r[0]
+    # row 26 goto row 1
+    # row 27 r[1] = 27
+    # row 28 r[1] *= 28
+    # row 29 r[1] += 29
+    # row 30 r[1] += 30
+    # row 31 r[1] *= 14
+    # row 32 r[1] *= 32
+    # row 33 r[5] += r[1]
+    # row 34 r[0] = 0
+    # row 35 goto row 1
+
+    # now more shortcutting, based on fixed sequences where you can not jump in the middle
+    # init: [1, 0, 0, 0, 0, 0]
+    # row 0  goto row 17
+    # row 1  r[2] = 1
+    # row 2  r[4] = 1
+    # row 3  r[1] = r[2]
+    # row 4  --
+    # row 5  if r[2] == r[5] goto row 7 else goto row 8
+    # row 6  --
+    # row 7  r[0] += r[2]
+    # row 8  r[4] += 1
+    # row 9  --
+    # row 10 if r[4] > r[5] goto row 12 else goto row 2
+    # row 11 --
+    # row 12 r[2] += 1
+    # row 13 --
+    # row 14 if r[2] > r[5] goto row 16 else goto row 2
+    # row 15 --
+    # row 16 goto row 257 (=exit)
+    # rows 17-24
+    # r[1] = (r[1] + 3) * 22 + 12
+    # r[5] = (r[5] + 2)**2 * 19*11 + r[1]
     # row 25 goto row 26 + r[0]
     # row 26 goto row 1
     # row 27 r[1] = 27
