@@ -219,19 +219,19 @@ def part_2():
     # row 0  goto row 17
     # row 1  r[2] = 1
     # row 2  r[4] = 1
-    # row 3  r[1] = r[2] * r[4]
+    # row 3  r[1] = 1
     # row 4  --
     # row 5  if r[1] == r[5] goto row 7 else goto row 8
-    # row 6  goto row 8
+    # row 6  --
     # row 7  r[0] += r[2]
     # row 8  r[4] += 1
-    # row 9  r[1] = 1 if r[4] > r[5] else 0 # todo: dodělat, asi
+    # row 9  --
     # row 10 if r[4] > r[5] goto row 12 else goto row 2
-    # row 11 goto row 2
+    # row 11 --
     # row 12 r[2] += 1
-    # row 13 r[1] = 1 if r[2] > r[5] else 0
+    # row 13 --
     # row 14 if r[2] > r[5] goto row 16 else goto row 2
-    # row 15 goto row 2
+    # row 15 --
     # row 16 goto row 257 (=exit)
     # row 17 r[5] += 2
     # row 18 r[5] = r[5]**2
