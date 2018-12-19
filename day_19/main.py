@@ -177,6 +177,7 @@ def part_1():
 
 
 # 0 wrong
+# 10551314 wrong
 def part_2():
     # row 0  r[3] = r[3] + 16
     # row 1  r[2] = 1
@@ -262,7 +263,7 @@ def part_2():
     # row 4  --
     # row 5  if r[2] == r[5] goto row 7 else goto row 8
     # row 6  --
-    # row 7  r[0] += r[2]
+    # row 7  r[0] += r[5]
     # row 8  r[4] += 1
     # row 9  --
     # row 10 if r[4] > r[5] goto row 12 else goto row 2
