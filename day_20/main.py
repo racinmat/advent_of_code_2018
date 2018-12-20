@@ -1,23 +1,14 @@
 import re
 import numpy as np
 
-LEFT = 0
-UP = 1
-RIGHT = 2
-DOWN = 3
-
-m = {
-    'W': LEFT,
-    'E': RIGHT,
-    'N': UP,
-    'S': DOWN,
-}
+FREE = 0
+WALL = 1
 
 MOVE = {
-    LEFT: [0, -1],
-    UP: [-1, 0],
-    RIGHT: [0, 1],
-    DOWN: [1, 0],
+    'W': [0, -1],
+    'E': [0, 1],
+    'N': [-1, 0],
+    'S': [1, 0],
 }
 
 
@@ -35,22 +26,31 @@ def prepare_data():
     count_s = regex.count('S')
     max_width = count_w + count_e
     max_height = count_n + count_s
-    grid = np.zeros((max_height, max_width, 4))
-    pos = np.array([count_w, count_n])
+    grid = np.ones((max_height * 2 + 1, max_width * 2 + 1), np.int32)
+    pos = np.array([count_w * 2, count_n * 2])
+
+    grid[tuple(pos)] = FREE
     return regex, grid, pos
 
 
-def explore_branches(grid, branches):
-    # todo: implement me
-    pass
-
-def process_straight_path(grid, path, pos):
-    # todo: implement me
-    # přesunout sem nějaké věci z explore path
-    pass
+def explore_branches(grid, branches_string, start_pos):
+    branches = branches_string[1:-1].split('|')
+    for branch in branches:
+        if branch == '':
+            continue
+        process_path(grid, branch, start_pos.copy())
 
 
-def explore_path(grid, path, pos):
+def process_straight_path(grid, path, curr_pos):
+    for letter in path:
+        curr_pos += MOVE[letter]
+        grid[tuple(curr_pos)] = FREE
+        curr_pos += MOVE[letter]
+        grid[tuple(curr_pos)] = FREE
+    return curr_pos
+
+
+def process_path(grid, path, pos):
     #     todo: dodělat
     # idea: explore_path bude přijímat string s nějakou cestou, kterou prozkoumá, najde v ní všechny branche hloubky 1 a prozkoumá je
     # explore_branches si bude pamatovat start a z něj projde všechny možnosti pomocí explore_path
@@ -63,12 +63,14 @@ def explore_path(grid, path, pos):
             path_pos += 1
             continue
 
-        path_end = path_pos + path[path_pos:].find('(')
-        for letter in path[path_pos:path_end]:
-            course = m[letter]
-            grid[curr_pos, course] = 1
-            pos += MOVE[course]
-        path_pos = path_end
+        branches_start_pos = path[path_pos:].find('(')
+        if branches_start_pos == -1:
+            break
+
+        path_end = path_pos + branches_start_pos
+        curr_pos = process_straight_path(grid, path[path_pos:path_end], curr_pos)
+
+        print_grid(grid, curr_pos)
 
         depth = 0
         # branches finding
@@ -84,15 +86,77 @@ def explore_path(grid, path, pos):
                 branches_end = branches_start + i + 1
                 break
 
-        explore_branches(grid, path[branches_start:branches_end])
+        explore_branches(grid, path[branches_start:branches_end], curr_pos)
         path_pos = branches_end
 
-    pass
+        print_grid(grid, curr_pos)
+    return grid
+
+
+def print_grid(grid, pos):
+    y_vals, x_vals = np.where(grid == FREE)[0:2]
+    min_y, max_y = min(y_vals) - 1, max(y_vals) + 1
+    min_x, max_x = min(x_vals) - 1, max(x_vals) + 1
+
+    grid_to_print = grid[min_y:max_y + 1, min_x:max_x + 1]
+
+    string_grid = np.chararray(grid_to_print.shape, unicode=True)
+    string_grid[grid_to_print == FREE] = '.'
+    string_grid[grid_to_print == WALL] = '#'
+    string_grid[tuple(pos - [min_y, min_x])] = 'X'
+
+    [print(''.join(i)) for i in string_grid]
+    print()
+
+
+def get_all_neighbours(loc):
+    neighbours = np.array([
+        [-1, 0],
+        [1, 0],
+        [0, -1],
+        [0, 1],
+    ], dtype=np.int8)
+    neighbours += loc
+    return neighbours
+
+
+def get_free_neighbours(grid, loc):
+    neighbours = get_all_neighbours(loc)
+    neighbours_tuple = neighbours.T[0], neighbours.T[1]
+    return neighbours[grid[neighbours_tuple] == FREE]
+
+
+def get_free_neighbours_for_locations(grid, locs):
+    neighbours = np.concatenate([get_all_neighbours(loc) for loc in locs])
+    neighbours_tuple = neighbours.T[0], neighbours.T[1]
+    return neighbours[grid[neighbours_tuple] == FREE]
+
+
+def find_longest_path(grid, start_pos):
+    distances = np.ones_like(grid, np.int32) * 200000  # should be big enough to behave like infinity
+    distances[tuple(start_pos)] = 0
+    open_nodes = [start_pos]
+    # some slightly modified dijkstra, boi
+    while len(open_nodes) > 0:
+        updated_neighbours = list()
+        neighbours = get_free_neighbours_for_locations(grid, open_nodes)
+        # changing this line gives different results, tiebreaking in dijkstra looks broken, fix it
+        neighbours_to_update = neighbours[
+            np.where(distances[tuple(neighbours.T)] >= distances[tuple(open_nodes[0])] + 1)]
+        # neighbours_to_update = neighbours[np.where(distances[tuple(neighbours.T)] > distances[tuple(node)] + 1)]
+        updated_neighbours = neighbours_to_update
+        distances[tuple(neighbours_to_update.T)] = distances[tuple(open_nodes[0])] + 1
+
+        open_nodes = updated_neighbours
+
+    distances[distances == 200000] = -1
+    return np.round(distances.max() / 2)
 
 
 def part_1():
-    regex, grid, pos = prepare_data()
-    explore_path(grid, regex, pos)
+    regex, grid, start_pos = prepare_data()
+    grid = process_path(grid, regex, start_pos.copy())
+    print(find_longest_path(grid, start_pos))
 
 
 def part_2():

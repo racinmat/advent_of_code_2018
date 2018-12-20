@@ -117,6 +117,7 @@ def find_first_step_in_path_to_nearest_target(grid, begin, targets):
     path_found = False
     targets_in_neighbours = []
     predecessors = dict()
+    # some slightly modified dijkstra, boi
     while not path_found and open_nodes:
         updated_neighbours = set()
         for node in open_nodes:
