@@ -245,12 +245,17 @@ def part_1():
 
 
 def program_in_python(r):
+    r_history = []
     r[5] = 123  # row 0
     while r[5] != 72:  # rows 1-4
         r[5] &= 456
     r[5] = 0  # row 5
 
     while True:  # rows 6-29
+        if len(r_history) > 100:
+            break
+
+        r_history.append(r.copy())
         r[4] = r[5] | 65536
         r[5] = 13431073
         while True:  # rows 8-26
@@ -261,16 +266,15 @@ def program_in_python(r):
                 break
             r[3] = 0
             while True:  # rows 18-25
-                r[2] = r[3] + 1
-                r[2] *= 256
+                r[2] = (r[3] + 1) * 256
                 if r[2] > r[4]:
                     break
                 r[3] += 1
 
             r[4] = r[3]
-
         if r[5] == r[0]:
             break
+    return r, r_history
 
 
 def part_2():
@@ -340,19 +344,30 @@ def part_2():
             break
     """
 
-    ip_pos, program, instructions = prepare_data()
+    # ip_pos, program, instructions = prepare_data()
 
-    ip = 0
-    my_answer = 3115806
+    my_answer = 0
     registry = [my_answer, 0, 0, 0, 0, 0]
-    while ip < len(program):
-        line = program[ip]
-        registry[ip_pos] = ip
-        instr_name, params = line
-        registry = instructions[instr_name](params, registry)
-        ip = registry[ip_pos]
-        ip += 1
-        # print(registry)
+    registry, r_history = program_in_python(registry)
+
+    # ip = 0
+    # while ip < len(program):
+    #     line = program[ip]
+    #     registry[ip_pos] = ip
+    #     instr_name, params = line
+    #     registry = instructions[instr_name](params, registry)
+    #     ip = registry[ip_pos]
+    #     ip += 1
+    #     # print(registry)
+
+    import numpy as np
+    r_history = np.array(r_history)
+    import matplotlib.pyplot as plt
+
+    for i in range(6):
+        plt.title('history of {}'.format(i))
+        plt.plot(np.arange(0, len(r_history[:, i]), 1), r_history[:, i])
+        plt.show()
 
     print(registry)
 
