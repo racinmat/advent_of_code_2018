@@ -251,6 +251,8 @@ def program_in_python(r):
         r[5] &= 456
     r[5] = 0  # row 5
 
+    # r0 is constant (my input)
+    # r2 is not needed at all
     while True:  # rows 6-29
         if len(r_history) > 100:
             break
@@ -265,10 +267,7 @@ def program_in_python(r):
             if 256 > r[4]:
                 break
             r[3] = 0
-            while True:  # rows 18-25
-                r[2] = (r[3] + 1) * 256
-                if r[2] > r[4]:
-                    break
+            while (r[3] + 1) * 256 <= r[4]:  # rows 18-25
                 r[3] += 1
 
             r[4] = r[3]
@@ -364,7 +363,7 @@ def part_2():
     r_history = np.array(r_history)
     import matplotlib.pyplot as plt
 
-    for i in range(6):
+    for i in [1, 3, 4, 5]:
         plt.title('history of {}'.format(i))
         plt.plot(np.arange(0, len(r_history[:, i]), 1), r_history[:, i])
         plt.show()
