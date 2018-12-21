@@ -32,6 +32,7 @@ def prepare_data():
     grid[tuple(pos)] = FREE
     return regex, grid, pos
 
+
 #  todo: fix on test input, branch in right bottom is not correct
 def explore_branches(grid, branches_string, start_pos):
     # can't split only by .split('|') because I need to use only splits in depth 1
@@ -45,7 +46,7 @@ def explore_branches(grid, branches_string, start_pos):
         if depth == 1 and letter == '|':
             split_indices.append(i)
 
-    branches = [branches_string[i+1:j] for i, j in zip(split_indices, split_indices[1:] + [-1])]
+    branches = [branches_string[i + 1:j] for i, j in zip(split_indices, split_indices[1:] + [-1])]
     # branches = branches_string[1:-1].split('|')
     for branch in branches:
         if branch == '':
@@ -132,7 +133,7 @@ def get_all_neighbours(loc):
         [1, 0],
         [0, -1],
         [0, 1],
-    ], dtype=np.int8)
+    ], dtype=np.int32)
     neighbours += loc
     return neighbours
 
@@ -149,26 +150,27 @@ def get_free_neighbours_for_locations(grid, locs):
     return neighbours[grid[neighbours_tuple] == FREE]
 
 
-def find_longest_path(grid, start_pos):
+def calculate_all_distances_from_position(grid, start_pos):
     distances = np.ones_like(grid, np.int32) * 200000  # should be big enough to behave like infinity
     distances[tuple(start_pos)] = 0
     open_nodes = [start_pos]
     # some slightly modified dijkstra, boi
+    curr_dist = 0
     while len(open_nodes) > 0:
         neighbours = get_free_neighbours_for_locations(grid, open_nodes)
         # changing this line gives different results, tiebreaking in dijkstra looks broken, fix it
-        neighbours_to_update = neighbours[
-            np.where(distances[tuple(neighbours.T)] >= distances[tuple(open_nodes[0])] + 1)]
+        neighbours_to_update = neighbours[np.where(distances[tuple(neighbours.T)] >= curr_dist + 1)]
         # neighbours_to_update = neighbours[np.where(distances[tuple(neighbours.T)] > distances[tuple(node)] + 1)]
         updated_neighbours = neighbours_to_update
-        distances[tuple(neighbours_to_update.T)] = distances[tuple(open_nodes[0])] + 1
+        distances[tuple(neighbours_to_update.T)] = curr_dist + 1
 
         open_nodes = updated_neighbours
+        curr_dist += 1
 
     distances[distances == 200000] = -1
-    return np.round(distances.max() / 2)
+    return distances
 
-# 200, too low
+
 def part_1():
     regex, grid, start_pos = prepare_data()
     grid = process_path(grid, regex, start_pos.copy())
@@ -179,11 +181,22 @@ def part_1():
     min_x, max_x = min(x_vals) - 1, max(x_vals) + 1
     grid = grid[min_y:max_y + 1, min_x:max_x + 1]
 
-    print(find_longest_path(grid, start_pos - [min_y, min_x]))
+    distances = calculate_all_distances_from_position(grid, start_pos - [min_y, min_x])
+    print(int(np.round(distances.max() / 2)))
 
-
+# 9367 too high
 def part_2():
-    pass
+    regex, grid, start_pos = prepare_data()
+    grid = process_path(grid, regex, start_pos.copy())
+    print_grid(grid, start_pos)
+
+    y_vals, x_vals = np.where(grid == FREE)[0:2]
+    min_y, max_y = min(y_vals) - 1, max(y_vals) + 1
+    min_x, max_x = min(x_vals) - 1, max(x_vals) + 1
+    grid = grid[min_y:max_y + 1, min_x:max_x + 1]
+
+    distances = calculate_all_distances_from_position(grid, start_pos - [min_y, min_x])
+    print(int(np.round(np.sum(distances >= 1000 * 2) / 2)))
 
 
 if __name__ == '__main__':
