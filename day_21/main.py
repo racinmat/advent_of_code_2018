@@ -158,28 +158,6 @@ def get_valid_instructions(change_log, instructions):
 
 
 def part_1():
-    # ip_pos, program, instructions = prepare_data()
-
-    # ip = 0
-    registry = [0, 0, 0, 0, 0, 0]
-    # while ip < len(program):
-    #     line = program[ip]
-    #     registry[ip_pos] = ip
-    #     instr_name, params = line
-    #     registry = instructions[instr_name](params, registry)
-    #     ip = registry[ip_pos]
-    #     ip += 1
-    #     print(registry)
-    # [1374, 1, 915, 256, 915, 914]
-    registry = program_in_python(registry)
-    print(registry)
-
-
-# 0 wrong
-# 10551314 wrong
-# 42156 too low
-
-def part_2():
     """
     row 0  r[5] = 123
     row 1  r[5] = r[5] & 456
@@ -251,6 +229,29 @@ def part_2():
 
     ip_pos, program, instructions = prepare_data()
 
+    ip = 0
+    my_answer = 3115806
+    registry = [my_answer, 0, 0, 0, 0, 0]
+    while ip < len(program):
+        line = program[ip]
+        registry[ip_pos] = ip
+        instr_name, params = line
+        registry = instructions[instr_name](params, registry)
+        ip = registry[ip_pos]
+        ip += 1
+        print(registry)
+
+    print(registry)
+
+
+# 0 wrong
+# 10551314 wrong
+# 42156 too low
+
+def part_2():
+
+    ip_pos, program, instructions = prepare_data()
+
     # ip = 0
     registry = [1, 0, 0, 0, 0, 0]
     # count = 0
@@ -278,8 +279,6 @@ def part_2():
     # plt.plot(np.arange(0, len(reg0s), 1), reg0s)
     # # plt.plot(np.arange(0, len(values) - 1, 1), np.diff(diff_sums))
     # plt.show()
-
-    registry = program_in_python(registry)
 
     print(registry)
 
