@@ -1,32 +1,32 @@
 #ip 1
-seti 123 0 5        # registry[c] = a
-bani 5 456 5        # registry[c] = registry[a] & b
-eqri 5 72 5         # registry[c] = 1 if registry[a] == b else 0
-addr 5 1 1          # registry[c] = registry[a] + registry[b]
-seti 0 0 1          # registry[c] = a
-seti 0 6 5          # registry[c] = a
-bori 5 65536 4      # registry[c] = registry[a] | b
-seti 13431073 4 5   # registry[c] = a
-bani 4 255 3        # registry[c] = registry[a] & b
-addr 5 3 5          # registry[c] = registry[a] + registry[b]
-bani 5 16777215 5   # registry[c] = registry[a] & b
-muli 5 65899 5      # registry[c] = registry[a] * b
-bani 5 16777215 5   # registry[c] = registry[a] & b
-gtir 256 4 3        # registry[c] = 1 if a > registry[b] else 0
-addr 3 1 1          # registry[c] = registry[a] + registry[b]
-addi 1 1 1          # registry[c] = registry[a] + b
-seti 27 9 1         # registry[c] = a
-seti 0 1 3          # registry[c] = a
-addi 3 1 2          # registry[c] = registry[a] + b
-muli 2 256 2        # registry[c] = registry[a] * b
-gtrr 2 4 2          # registry[c] = 1 if registry[a] > registry[b] else 0
-addr 2 1 1          # registry[c] = registry[a] + registry[b]
-addi 1 1 1          # registry[c] = registry[a] + b
-seti 25 4 1         # registry[c] = a
-addi 3 1 3          # registry[c] = registry[a] + b
-seti 17 8 1         # registry[c] = a
-setr 3 4 4          # registry[c] = registry[a]
-seti 7 7 1          # registry[c] = a
-eqrr 5 0 3          # registry[c] = 1 if registry[a] == registry[b] else 0
-addr 3 1 1          # registry[c] = registry[a] + registry[b]
-seti 5 9 1          # registry[c] = a
+seti 123 0 5        # r[5] = 123
+bani 5 456 5        # r[5] = r[5] & 456
+eqri 5 72 5         # r[5] = 1 if r[5] == 72 else 0
+addr 5 1 1          # r[1] = r[5] + r[1]
+seti 0 0 1          # r[1] = 0
+seti 0 6 5          # r[5] = 0
+bori 5 65536 4      # r[4] = r[5] | 65536
+seti 13431073 4 5   # r[5] = 13431073
+bani 4 255 3        # r[3] = r[4] & 255
+addr 5 3 5          # r[5] = r[5] + r[3]
+bani 5 16777215 5   # r[5] = r[5] & 16777215
+muli 5 65899 5      # r[5] = r[5] * 65899
+bani 5 16777215 5   # r[5] = r[5] & 16777215
+gtir 256 4 3        # r[3] = 1 if 256 > r[4] else 0
+addr 3 1 1          # r[1] = r[3] + r[1]
+addi 1 1 1          # r[1] = r[1] + 1
+seti 27 9 1         # r[1] = 27
+seti 0 1 3          # r[3] = 0
+addi 3 1 2          # r[2] = r[3] + 1
+muli 2 256 2        # r[2] = r[2] * 256
+gtrr 2 4 2          # r[2] = 1 if r[2] > r[4] else 0
+addr 2 1 1          # r[1] = r[2] + r[1]
+addi 1 1 1          # r[1] = r[1] + 1
+seti 25 4 1         # r[1] = 25
+addi 3 1 3          # r[3] = r[3] + 1
+seti 17 8 1         # r[1] = 17
+setr 3 4 4          # r[4] = r[3]
+seti 7 7 1          # r[1] = 7
+eqrr 5 0 3          # r[3] = 1 if r[5] == r[0] else 0
+addr 3 1 1          # r[1] = r[3] + r[1]
+seti 5 9 1          # r[1] = 5

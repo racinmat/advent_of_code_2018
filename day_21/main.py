@@ -175,163 +175,78 @@ def part_1():
     print(registry)
 
 
-def program_in_python(r):
-    """"
-    now more shortcutting, based on fixed sequences where you can not jump in the middle
-    init: [1, 0, 0, 0, 0, 0]
-    row 0  goto row 17
-    row 1  r[2] = 1
-    row 2  r[4] = 1
-    row 3  r[1] = r[2] * r[4]
-    row 4  --
-    row 5  if r[1] == r[5] goto row 7 else goto row 8
-    row 6  --
-    row 7  r[0] += r[2]
-    row 8  r[4] += 1
-    row 9  --
-    row 10 if r[4] > r[5] goto row 12 else goto row 3
-    row 11 --
-    row 12 r[2] += 1
-    row 13 --
-    row 14 if r[2] > r[5] goto row 16 else goto row 2
-    row 15 --
-    row 16 goto row 257 (=exit)
-    rows 17-24
-    r[1] = (r[1] + 3) * 22 + 12
-    r[5] = (r[5] + 2)**2 * 19*11 + r[1]
-    row 25 goto row 26 + r[0]   # r[0] is either 0 or 1 now
-    row 26 goto row 1
-    rows 27-33
-    r[1] = (27 * 28 + 29) * 30 * 14 * 32
-    r[5] += r[1]
-    row 34 r[0] = 0
-    row 35 goto row 1
-    """
-
-    """
-    r[2] = 1
-    r[4] = 1
-    r[1] = r[2] * r[4]
-    if r[1] == r[5]:
-        r[0] += r[2]
-    r[4] += 1
-    if r[4] > r[5]:
-        r[2] += 1
-        if r[2] > r[5]:
-            return
-        else:
-            r[4] = 1
-            ...
-    else:
-        r[1] = r[2] * r[4]
-        ...
-    """
-
-    r[1] = (r[1] + 3) * 22 + 12
-    r[5] = (r[5] + 2) ** 2 * 19 * 11 + r[1]
-    if r[0] == 1:
-        r[1] = (27 * 28 + 29) * 30 * 14 * 32
-        r[5] += r[1]
-        r[0] = 0
-
-    r[2] = 1
-    while r[2] <= r[5]:
-        # r[4] = 1
-        # while r[4] <= r[5]:
-        #     if r[2] * r[4] == r[5]:
-        #         r[0] += r[2]
-        #         # break   # because if won't be true twice in a inner loop
-        #     r[4] += 1
-        # optimizing inner loop, r[2] is constant for the whole loop
-        r4, remainder = divmod(r[5], r[2])
-        if remainder == 0:
-            r[0] += r[2]
-        r[2] += 1
-    return r
-
-
 # 0 wrong
 # 10551314 wrong
 # 42156 too low
 
 def part_2():
     """
-    row 0  r[3] = r[3] + 16
-    row 1  r[2] = 1
-    row 2  r[4] = 1
-    row 3  r[1] = r[2] * r[4]
-    row 4  r[1] = 1 if r[1] == r[5] else 0
-    row 5  r[3] = r[1] + r[3]
-    row 6  r[3] = r[3] + 1
-    row 7  r[0] = r[2] + r[0]
-    row 8  r[4] = r[4] + 1
-    row 9  r[1] = 1 if r[4] > r[5] else 0
-    row 10 r[3] = r[3] + r[1]
-    row 11 r[3] = 2
-    row 12 r[2] = r[2] + 1
-    row 13 r[1] = 1 if r[2] > r[5] else 0
-    row 14 r[3] = r[1] + r[3]
-    row 15 r[3] = 1
-    row 16 r[3] = r[3] * r[3]
-    row 17 r[5] = r[5] + 2
-    row 18 r[5] = r[5] * r[5]
-    row 19 r[5] = r[3] * r[5]
-    row 20 r[5] = r[5] * 11
-    row 21 r[1] = r[1] + 3
-    row 22 r[1] = r[1] * r[3]
-    row 23 r[1] = r[1] + 12
-    row 24 r[5] = r[5] + r[1]
-    row 25 r[3] = r[3] + r[0]
-    row 26 r[3] = 0
-    row 27 r[1] = r[3]
-    row 28 r[1] = r[1] * r[3]
+    row 0  r[5] = 123
+    row 1  r[5] = r[5] & 456
+    row 2  r[5] = 1 if r[5] == 72 else 0
+    row 3  r[1] = r[5] + r[1]
+    row 4  r[1] = 0
+    row 5  r[5] = 0
+    row 6  r[4] = r[5] | 65536
+    row 7  r[5] = 13431073
+    row 8  r[3] = r[4] & 255
+    row 9  r[5] = r[5] + r[3]
+    row 10 r[5] = r[5] & 16777215
+    row 11 r[5] = r[5] * 65899
+    row 12 r[5] = r[5] & 16777215
+    row 13 r[3] = 1 if 256 > r[4] else 0
+    row 14 r[1] = r[3] + r[1]
+    row 15 r[1] = r[1] + 1
+    row 16 r[1] = 27
+    row 17 r[3] = 0
+    row 18 r[2] = r[3] + 1
+    row 19 r[2] = r[2] * 256
+    row 20 r[2] = 1 if r[2] > r[4] else 0
+    row 21 r[1] = r[2] + r[1]
+    row 22 r[1] = r[1] + 1
+    row 23 r[1] = 25
+    row 24 r[3] = r[3] + 1
+    row 25 r[1] = 17
+    row 26 r[4] = r[3]
+    row 27 r[1] = 7
+    row 28 r[3] = 1 if r[5] == r[0] else 0
     row 29 r[1] = r[3] + r[1]
-    row 30 r[1] = r[3] * r[1]
-    row 31 r[1] = r[1] * 14
-    row 32 r[1] = r[1] * r[3]
-    row 33 r[5] = r[5] + r[1]
-    row 34 r[0] = 0
-    row 35 r[3] = 0
+    row 30 r[1] = 5
     """
 
     """
-    init: [1, 0, 0, 0, 0, 0]
-    row 0  goto row 17
-    row 1  r[2] = 1
-    row 2  r[4] = 1
-    row 3  r[1] = r[2] * r[4]
-    row 4  --
-    row 5  if r[1] == r[5] goto row 7 else goto row 8
-    row 6  --
-    row 7  r[0] += r[2]
-    row 8  r[4] += 1
-    row 9  --
-    row 10 if r[4] > r[5] goto row 12 else goto row 3
-    row 11 --
-    row 12 r[2] += 1
-    row 13 --
-    row 14 if r[2] > r[5] goto row 16 else goto row 2
-    row 15 --
-    row 16 goto row 257 (=exit)
-    row 17 r[5] += 2
-    row 18 r[5] = r[5]**2
-    row 19 r[5] *= 19
-    row 20 r[5] *= 11
-    row 21 r[1] += 3
-    row 22 r[1] *= 22
-    row 23 r[1] += 12
-    row 24 r[5] += r[1]
-    row 25 goto row 26 + r[0]
-    row 26 goto row 1
-    row 27 r[1] = 27
-    row 28 r[1] *= 28
-    row 29 r[1] += 29
-    row 30 r[1] *= 30
-    row 31 r[1] *= 14
-    row 32 r[1] *= 32
-    row 33 r[5] += r[1]
-    row 34 r[0] = 0
-    row 35 goto row 1
+    init: [?, 0, 0, 0, 0, 0]    # r[0] can be whatever I choose
+    row 0  r[5] = 123
+    row 1  r[5] = r[5] & 456
+    row 2  r[5] = 1 if r[5] == 72 else 0
+    row 3  r[1] = r[5] + r[1]
+    row 4  r[1] = 0
+    row 5  r[5] = 0
+    row 6  r[4] = r[5] | 65536
+    row 7  r[5] = 13431073
+    row 8  r[3] = r[4] & 255
+    row 9  r[5] = r[5] + r[3]
+    row 10 r[5] = r[5] & 16777215
+    row 11 r[5] = r[5] * 65899
+    row 12 r[5] = r[5] & 16777215
+    row 13 r[3] = 1 if 256 > r[4] else 0
+    row 14 r[1] = r[3] + r[1]
+    row 15 r[1] = r[1] + 1
+    row 16 r[1] = 27
+    row 17 r[3] = 0
+    row 18 r[2] = r[3] + 1
+    row 19 r[2] = r[2] * 256
+    row 20 r[2] = 1 if r[2] > r[4] else 0
+    row 21 r[1] = r[2] + r[1]
+    row 22 r[1] = r[1] + 1
+    row 23 r[1] = 25
+    row 24 r[3] = r[3] + 1
+    row 25 r[1] = 17
+    row 26 r[4] = r[3]
+    row 27 r[1] = 7
+    row 28 r[3] = 1 if r[5] == r[0] else 0
+    row 29 r[1] = r[3] + r[1]
+    row 30 r[1] = 5
     """
 
     ip_pos, program, instructions = prepare_data()
