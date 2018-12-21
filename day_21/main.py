@@ -253,43 +253,6 @@ def part_2():
     """
     init: [?, 0, 0, 0, 0, 0]    # r[0] can be whatever I choose
     row 0  r[5] = 123
-    row 1  r[5] &= 456
-    row 2  --
-    row 3  if r[5] == 72 goto row 5 else goto row 1
-    row 4  --
-    row 5  r[5] = 0
-    row 6  r[4] = r[5] | 65536
-    row 7  r[5] = 13431073
-    row 8  r[3] = r[4] & 255
-    row 9  r[5] += r[3]
-    row 10 r[5] &= 16777215
-    row 11 r[5] *= 65899
-    row 12 r[5] &= 16777215
-    row 13 --
-    row 14 if 256 > r[4] goto row 28 else goto row 17
-    row --
-    row --
-    row 17 r[3] = 0
-    row 18 r[2] = r[3] + 1
-    row 19 r[2] *= 256
-    row 20 r[2] = 1 if r[2] > r[4] else 0
-    row 21 if r[2] > r[4] goto row 26 else goto row 24
-    row --
-    row --
-    row 24 r[3] += 1
-    row 25 goto row 18
-    row 26 r[4] = r[3]
-    row 27 goto row 8
-    row 28 --
-    row 29 if r[5] == r[0] goto row 31 (exit) else goto row 6
-    row 30 --
-    """
-
-    """
-    init: [?, 0, 0, 0, 0, 0]    # r[0] can be whatever I choose
-    # rewriting to python
-    r[5] = 123
-    
     row 1  r[5] &= 456                      <-- # marks where I can jump
     row 2  --
     row 3  if r[5] == 72 goto row 5 else goto row 1
@@ -309,7 +272,54 @@ def part_2():
     row 17 r[3] = 0                         <--
     row 18 r[2] = r[3] + 1                  <--
     row 19 r[2] *= 256
-    row 20 r[2] = 1 if r[2] > r[4] else 0
+    row 20 --
+    row 21 if r[2] > r[4] goto row 26 else goto row 24
+    row --
+    row --
+    row 24 r[3] += 1                        <--
+    row 25 goto row 18
+    row 26 r[4] = r[3]                      <--
+    row 27 goto row 8
+    row 28 --
+    row 29 if r[5] == r[0] goto row 31 (exit) else goto row 6   <--
+    row 30 --
+    """
+
+    """
+    init: [?, 0, 0, 0, 0, 0]    # r[0] can be whatever I choose
+    # rewriting to python
+    # row 0
+    r[5] = 123
+    
+    # rows 18-25
+    while True:
+        r[2] = r[3] + 1
+        r[2] *= 256
+        if r[2] > r[4]:
+            break
+        r[3] += 1
+    
+    row 0  r[5] = 123
+    row 1  r[5] &= 456                      <-- # marks where I can jump
+    row 2  --
+    row 3  if r[5] == 72 goto row 5 else goto row 1
+    row 4  --
+    row 5  r[5] = 0                         <--
+    row 6  r[4] = r[5] | 65536
+    row 7  r[5] = 13431073
+    row 8  r[3] = r[4] & 255                <--
+    row 9  r[5] += r[3]
+    row 10 r[5] &= 16777215
+    row 11 r[5] *= 65899
+    row 12 r[5] &= 16777215
+    row 13 --
+    row 14 if 256 > r[4] goto row 28 else goto row 17
+    row --
+    row --
+    row 17 r[3] = 0                         <--
+    row 18 r[2] = r[3] + 1                  <--
+    row 19 r[2] *= 256
+    row 20 --
     row 21 if r[2] > r[4] goto row 26 else goto row 24
     row --
     row --
