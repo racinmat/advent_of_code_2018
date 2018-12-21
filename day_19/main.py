@@ -250,10 +250,6 @@ def program_in_python(r):
     return r
 
 
-# 0 wrong
-# 10551314 wrong
-# 42156 too low
-
 def part_2():
     """
     row 0  r[3] = r[3] + 16
