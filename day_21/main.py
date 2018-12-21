@@ -1,4 +1,5 @@
 import re
+from math import ceil
 
 
 def load_input():
@@ -252,25 +253,20 @@ def program_in_python(r):
     r[5] = 0  # row 5
 
     # r0 is constant (my input)
+    # r1 is not used at all, it's row number
     # r2 is not needed at all
     while True:  # rows 6-29
-        if len(r_history) > 100:
+        if len(r_history) > 3000:
             break
 
         r_history.append(r.copy())
         r[4] = r[5] | 65536
         r[5] = 13431073
         while True:  # rows 8-26
-            r[3] = r[4] & 255
-            r[5] += r[3]
-            r[5] = ((r[5] & 16777215) * 65899) & 16777215
+            r[5] = (((r[5] + (r[4] & 255)) & 16777215) * 65899) & 16777215
             if 256 > r[4]:
                 break
-            r[3] = 0
-            while (r[3] + 1) * 256 <= r[4]:  # rows 18-25
-                r[3] += 1
-
-            r[4] = r[3]
+            r[4] = ceil(r[4] / 256 - 1 + 1e-5)   # to takhle the <= check
         if r[5] == r[0]:
             break
     return r, r_history
@@ -343,12 +339,15 @@ def part_2():
             break
     """
 
-    # ip_pos, program, instructions = prepare_data()
+    ip_pos, program, instructions = prepare_data()
 
     my_answer = 0
     registry = [my_answer, 0, 0, 0, 0, 0]
     registry, r_history = program_in_python(registry)
 
+    # my_answer = 0
+    # registry = [my_answer, 0, 0, 0, 0, 0]
+    # counter = 0
     # ip = 0
     # while ip < len(program):
     #     line = program[ip]
@@ -357,17 +356,26 @@ def part_2():
     #     registry = instructions[instr_name](params, registry)
     #     ip = registry[ip_pos]
     #     ip += 1
+    #     counter += 1
     #     # print(registry)
 
     import numpy as np
     r_history = np.array(r_history)
     import matplotlib.pyplot as plt
 
-    for i in [1, 3, 4, 5]:
+    for i in [3, 4, 5]:
+        plt.figure(figsize=(20, 8))
         plt.title('history of {}'.format(i))
         plt.plot(np.arange(0, len(r_history[:, i]), 1), r_history[:, i])
         plt.show()
 
+        plt.figure(figsize=(20, 8))
+        plt.title('histogram of {}'.format(i))
+        plt.hist(r_history[:, i], bins=255)
+        plt.show()
+
+    print(len(np.unique(r_history[:, 5])))
+    print(len(np.unique(r_history[:, 5])) == len(r_history[:, 5]))
     print(registry)
 
 
