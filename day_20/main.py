@@ -13,7 +13,7 @@ MOVE = {
 
 
 def load_input() -> str:
-    with open('test_input.txt', encoding='utf-8') as lines:
+    with open('input.txt', encoding='utf-8') as lines:
         regex = next(lines)
     return regex
 
@@ -75,14 +75,19 @@ def process_path(grid, path, pos):
             path_pos += 1
             continue
 
-        branches_start_pos = path[path_pos:].find('(')
-        if branches_start_pos == -1:
+        if letter == '$':
             break
 
-        path_end = path_pos + branches_start_pos
-        curr_pos = process_straight_path(grid, path[path_pos:path_end], curr_pos)
+        branches_start_pos = path[path_pos:].find('(')
 
-        print_grid(grid, curr_pos)
+        if branches_start_pos == -1:
+            curr_pos = process_straight_path(grid, path[path_pos:], curr_pos)
+            break
+        else:
+            path_end = path_pos + branches_start_pos
+            curr_pos = process_straight_path(grid, path[path_pos:path_end], curr_pos)
+
+        # print_grid(grid, curr_pos)
 
         depth = 0
         # branches finding
@@ -101,7 +106,7 @@ def process_path(grid, path, pos):
         explore_branches(grid, path[branches_start:branches_end], curr_pos)
         path_pos = branches_end
 
-        print_grid(grid, curr_pos)
+        # print_grid(grid, curr_pos)
     return grid
 
 
@@ -150,7 +155,6 @@ def find_longest_path(grid, start_pos):
     open_nodes = [start_pos]
     # some slightly modified dijkstra, boi
     while len(open_nodes) > 0:
-        updated_neighbours = list()
         neighbours = get_free_neighbours_for_locations(grid, open_nodes)
         # changing this line gives different results, tiebreaking in dijkstra looks broken, fix it
         neighbours_to_update = neighbours[
@@ -164,11 +168,18 @@ def find_longest_path(grid, start_pos):
     distances[distances == 200000] = -1
     return np.round(distances.max() / 2)
 
-
+# 200, too low
 def part_1():
     regex, grid, start_pos = prepare_data()
     grid = process_path(grid, regex, start_pos.copy())
-    print(find_longest_path(grid, start_pos))
+    print_grid(grid, start_pos)
+
+    y_vals, x_vals = np.where(grid == FREE)[0:2]
+    min_y, max_y = min(y_vals) - 1, max(y_vals) + 1
+    min_x, max_x = min(x_vals) - 1, max(x_vals) + 1
+    grid = grid[min_y:max_y + 1, min_x:max_x + 1]
+
+    print(find_longest_path(grid, start_pos - [min_y, min_x]))
 
 
 def part_2():
