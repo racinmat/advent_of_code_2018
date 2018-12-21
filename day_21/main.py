@@ -341,48 +341,45 @@ def part_2():
 
     ip_pos, program, instructions = prepare_data()
 
-    my_answer = 0
+    my_answer = 13959373
     registry = [my_answer, 0, 0, 0, 0, 0]
-    registry, r_history = program_in_python(registry)
+    counter = 0
+    ip = 0
+    while ip < len(program):
+        line = program[ip]
+        registry[ip_pos] = ip
+        instr_name, params = line
+        registry = instructions[instr_name](params, registry)
+        ip = registry[ip_pos]
+        ip += 1
+        counter += 1
+        # print(registry)
 
-    # my_answer = 0
-    # registry = [my_answer, 0, 0, 0, 0, 0]
-    # counter = 0
-    # ip = 0
-    # while ip < len(program):
-    #     line = program[ip]
-    #     registry[ip_pos] = ip
-    #     instr_name, params = line
-    #     registry = instructions[instr_name](params, registry)
-    #     ip = registry[ip_pos]
-    #     ip += 1
-    #     counter += 1
-    #     # print(registry)
-
-    import numpy as np
-    r_history = np.array(r_history)
-    import matplotlib.pyplot as plt
-
-    # for i in [3, 4, 5]:
-    #     plt.figure(figsize=(20, 8))
-    #     plt.title('history of {}'.format(i))
-    #     plt.plot(np.arange(0, len(r_history[:, i]), 1), r_history[:, i])
-    #     plt.show()
+    # import numpy as np
+    # r_history = np.array(r_history)
+    # import matplotlib.pyplot as plt
     #
-    #     plt.figure(figsize=(20, 8))
-    #     plt.title('histogram of {}'.format(i))
-    #     plt.hist(r_history[:, i], bins=255)
-    #     plt.show()
+    # # for i in [3, 4, 5]:
+    # #     plt.figure(figsize=(20, 8))
+    # #     plt.title('history of {}'.format(i))
+    # #     plt.plot(np.arange(0, len(r_history[:, i]), 1), r_history[:, i])
+    # #     plt.show()
+    # #
+    # #     plt.figure(figsize=(20, 8))
+    # #     plt.title('histogram of {}'.format(i))
+    # #     plt.hist(r_history[:, i], bins=255)
+    # #     plt.show()
+    #
+    # print(len(np.unique(r_history[:, 5])))
+    # print(len(np.unique(r_history[:, 5])) == len(r_history[:, 5]))
+    # value_counts_all = np.bincount(r_history[:, 5])
+    # value_counts = value_counts_all[value_counts_all > 0]
+    # repeated_indices = np.where(np.isin(r_history[:, 5], np.where(value_counts_all == 2)))
+    # repeated_values = r_history[repeated_indices]
+    # print(registry)
+    # my_answer = r_history[np.max(np.where(value_counts == 1)), 5]   # this is the last non-repeated value
+    # print(my_answer)  # 13959373
 
-    print(len(np.unique(r_history[:, 5])))
-    print(len(np.unique(r_history[:, 5])) == len(r_history[:, 5]))
-    value_counts_all = np.bincount(r_history[:, 5])
-    value_counts = value_counts_all[value_counts_all > 0]
-    repeated_indices = np.where(np.isin(r_history[:, 5], np.where(value_counts_all == 2)))
-    repeated_values = r_history[repeated_indices]
-    print(registry)
-    my_answer = r_history[np.max(np.where(value_counts == 1)), 5]   # this is the last non-repeated value
-    print(my_answer)
 
 if __name__ == '__main__':
     from time import time
