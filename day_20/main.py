@@ -32,7 +32,7 @@ def prepare_data():
     grid[tuple(pos)] = FREE
     return regex, grid, pos
 
-
+#  todo: fix on test input, branch in right bottom is not correct
 def explore_branches(grid, branches_string, start_pos):
     # can't split only by .split('|') because I need to use only splits in depth 1
     split_indices = [0]
