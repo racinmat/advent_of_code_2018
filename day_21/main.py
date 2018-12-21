@@ -256,7 +256,7 @@ def program_in_python(r):
     # r1 is not used at all, it's row number
     # r2 is not needed at all
     while True:  # rows 6-29
-        if len(r_history) > 3000:
+        if len(r_history) > 11000:
             break
 
         r_history.append(r.copy())
@@ -363,21 +363,26 @@ def part_2():
     r_history = np.array(r_history)
     import matplotlib.pyplot as plt
 
-    for i in [3, 4, 5]:
-        plt.figure(figsize=(20, 8))
-        plt.title('history of {}'.format(i))
-        plt.plot(np.arange(0, len(r_history[:, i]), 1), r_history[:, i])
-        plt.show()
-
-        plt.figure(figsize=(20, 8))
-        plt.title('histogram of {}'.format(i))
-        plt.hist(r_history[:, i], bins=255)
-        plt.show()
+    # for i in [3, 4, 5]:
+    #     plt.figure(figsize=(20, 8))
+    #     plt.title('history of {}'.format(i))
+    #     plt.plot(np.arange(0, len(r_history[:, i]), 1), r_history[:, i])
+    #     plt.show()
+    #
+    #     plt.figure(figsize=(20, 8))
+    #     plt.title('histogram of {}'.format(i))
+    #     plt.hist(r_history[:, i], bins=255)
+    #     plt.show()
 
     print(len(np.unique(r_history[:, 5])))
     print(len(np.unique(r_history[:, 5])) == len(r_history[:, 5]))
+    value_counts_all = np.bincount(r_history[:, 5])
+    value_counts = value_counts_all[value_counts_all > 0]
+    repeated_indices = np.where(np.isin(r_history[:, 5], np.where(value_counts_all == 2)))
+    repeated_values = r_history[repeated_indices]
     print(registry)
-
+    my_answer = r_history[np.max(np.where(value_counts == 1)), 5]   # this is the last non-repeated value
+    print(my_answer)
 
 if __name__ == '__main__':
     from time import time
