@@ -219,34 +219,34 @@ def part_2():
     row 0  r[5] = 123
     row 1  r[5] = r[5] & 456
     row 2  r[5] = 1 if r[5] == 72 else 0
-    row 3  r[1] = r[5] + r[1]
-    row 4  r[1] = 0
+    row 3  if r[5] == 72 goto row 5 else goto row 1
+    row 4  --
     row 5  r[5] = 0
     row 6  r[4] = r[5] | 65536
     row 7  r[5] = 13431073
     row 8  r[3] = r[4] & 255
-    row 9  r[5] = r[5] + r[3]
-    row 10 r[5] = r[5] & 16777215
-    row 11 r[5] = r[5] * 65899
-    row 12 r[5] = r[5] & 16777215
-    row 13 r[3] = 1 if 256 > r[4] else 0
-    row 14 r[1] = r[3] + r[1]
-    row 15 r[1] = r[1] + 1
-    row 16 r[1] = 27
+    row 9  r[5] += r[3]
+    row 10 r[5] &= 16777215
+    row 11 r[5] *= 65899
+    row 12 r[5] &= 16777215
+    row 13 --
+    row 14 if 256 > r[4] goto row 28 else goto row 17
+    row --
+    row --
     row 17 r[3] = 0
     row 18 r[2] = r[3] + 1
-    row 19 r[2] = r[2] * 256
+    row 19 r[2] *= 256
     row 20 r[2] = 1 if r[2] > r[4] else 0
-    row 21 r[1] = r[2] + r[1]
-    row 22 r[1] = r[1] + 1
-    row 23 r[1] = 25
-    row 24 r[3] = r[3] + 1
-    row 25 r[1] = 17
+    row 21 if r[2] > r[4] goto row 26 else goto row 24
+    row --
+    row --
+    row 24 r[3] += 1
+    row 25 goto row 18
     row 26 r[4] = r[3]
-    row 27 r[1] = 7
-    row 28 r[3] = 1 if r[5] == r[0] else 0
-    row 29 r[1] = r[3] + r[1]
-    row 30 r[1] = 5
+    row 27 goto row 8
+    row 28 --
+    row 29 if r[5] == r[0] goto row 31 (exit) else goto row 6
+    row 30 --
     """
 
     ip_pos, program, instructions = prepare_data()
