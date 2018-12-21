@@ -250,35 +250,91 @@ def part_1():
 
 def part_2():
 
+    """
+    init: [?, 0, 0, 0, 0, 0]    # r[0] can be whatever I choose
+    row 0  r[5] = 123
+    row 1  r[5] &= 456
+    row 2  --
+    row 3  if r[5] == 72 goto row 5 else goto row 1
+    row 4  --
+    row 5  r[5] = 0
+    row 6  r[4] = r[5] | 65536
+    row 7  r[5] = 13431073
+    row 8  r[3] = r[4] & 255
+    row 9  r[5] += r[3]
+    row 10 r[5] &= 16777215
+    row 11 r[5] *= 65899
+    row 12 r[5] &= 16777215
+    row 13 --
+    row 14 if 256 > r[4] goto row 28 else goto row 17
+    row --
+    row --
+    row 17 r[3] = 0
+    row 18 r[2] = r[3] + 1
+    row 19 r[2] *= 256
+    row 20 r[2] = 1 if r[2] > r[4] else 0
+    row 21 if r[2] > r[4] goto row 26 else goto row 24
+    row --
+    row --
+    row 24 r[3] += 1
+    row 25 goto row 18
+    row 26 r[4] = r[3]
+    row 27 goto row 8
+    row 28 --
+    row 29 if r[5] == r[0] goto row 31 (exit) else goto row 6
+    row 30 --
+    """
+
+    """
+    init: [?, 0, 0, 0, 0, 0]    # r[0] can be whatever I choose
+    # rewriting to python
+    r[5] = 123
+    
+    row 1  r[5] &= 456                      <-- # marks where I can jump
+    row 2  --
+    row 3  if r[5] == 72 goto row 5 else goto row 1
+    row 4  --
+    row 5  r[5] = 0                         <--
+    row 6  r[4] = r[5] | 65536
+    row 7  r[5] = 13431073
+    row 8  r[3] = r[4] & 255                <--
+    row 9  r[5] += r[3]
+    row 10 r[5] &= 16777215
+    row 11 r[5] *= 65899
+    row 12 r[5] &= 16777215
+    row 13 --
+    row 14 if 256 > r[4] goto row 28 else goto row 17
+    row --
+    row --
+    row 17 r[3] = 0                         <--
+    row 18 r[2] = r[3] + 1                  <--
+    row 19 r[2] *= 256
+    row 20 r[2] = 1 if r[2] > r[4] else 0
+    row 21 if r[2] > r[4] goto row 26 else goto row 24
+    row --
+    row --
+    row 24 r[3] += 1                        <--
+    row 25 goto row 18
+    row 26 r[4] = r[3]                      <--
+    row 27 goto row 8
+    row 28 --
+    row 29 if r[5] == r[0] goto row 31 (exit) else goto row 6   <--
+    row 30 --
+    """
+
     ip_pos, program, instructions = prepare_data()
 
-    # ip = 0
-    registry = [1, 0, 0, 0, 0, 0]
-    # count = 0
-    # ips = [ip]
-    # reg0s = [0]
-    # while ip < len(program):
-    #     line = program[ip]
-    #     registry[ip_pos] = ip
-    #     instr_name, params = line
-    #     registry = instructions[instr_name](params, registry)
-    #     ip = registry[ip_pos]
-    #     ip += 1
-    #     count += 1
-    #     # ips.append(ip)
-    #     # reg0s.append(registry[0])
-    #     if count % 10000000 == 0:
-    #         print(registry)
-    #     # if count > 1000:
-    #     #     break
-
-    # import numpy as np
-    # import matplotlib.pyplot as plt
-    # plt.plot(np.arange(0, len(ips), 1), ips)
-    # plt.show()
-    # plt.plot(np.arange(0, len(reg0s), 1), reg0s)
-    # # plt.plot(np.arange(0, len(values) - 1, 1), np.diff(diff_sums))
-    # plt.show()
+    ip = 0
+    my_answer = 3115806
+    registry = [my_answer, 0, 0, 0, 0, 0]
+    while ip < len(program):
+        line = program[ip]
+        registry[ip_pos] = ip
+        instr_name, params = line
+        registry = instructions[instr_name](params, registry)
+        ip = registry[ip_pos]
+        ip += 1
+        # print(registry)
 
     print(registry)
 
