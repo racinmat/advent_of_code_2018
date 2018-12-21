@@ -266,7 +266,7 @@ def program_in_python(r):
             r[5] = (((r[5] + (r[4] & 255)) & 16777215) * 65899) & 16777215
             if 256 > r[4]:
                 break
-            r[4] = ceil(r[4] / 256 - 1 + 1e-5)   # to takhle the <= check
+            r[4] = ceil(r[4] / 256 - 1 + 1e-5)   # to tackle the <= check
         if r[5] == r[0]:
             break
     return r, r_history
