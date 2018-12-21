@@ -34,7 +34,19 @@ def prepare_data():
 
 
 def explore_branches(grid, branches_string, start_pos):
-    branches = branches_string[1:-1].split('|')
+    # can't split only by .split('|') because I need to use only splits in depth 1
+    split_indices = [0]
+    depth = 0
+    for i, letter in enumerate(branches_string):
+        if letter == '(':
+            depth += 1
+        if letter == ')':
+            depth -= 1
+        if depth == 1 and letter == '|':
+            split_indices.append(i)
+
+    branches = [branches_string[i+1:j] for i, j in zip(split_indices, split_indices[1:] + [-1])]
+    # branches = branches_string[1:-1].split('|')
     for branch in branches:
         if branch == '':
             continue
