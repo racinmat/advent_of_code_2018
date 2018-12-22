@@ -79,21 +79,31 @@ def part_2():
 
     geo_idx, erosion, cave_type = build_grid(depth, target, (target[0] + 200, target[1] + 200))
     equipment = [NEITHER, TORCH, GEAR]
+    allowed_equipment = {
+        ROCKY: {GEAR, TORCH},
+        WET: {GEAR, NEITHER},
+        NARROW: {TORCH, NEITHER}}
     g = nx.Graph()
 
-    for i in range(1, geo_idx.shape[0]):
-        for j in range(1, geo_idx.shape[1]):
-            for k in equipment:
-                g.add_node((i, j, k))
+    for i, j in np.ndindex(geo_idx.shape):
+        for k in equipment:
+            g.add_node((i, j, k))
 
-    for i in range(1, geo_idx.shape[0]):
-        for j in range(1, geo_idx.shape[1]):
-            for k in equipment:
-                for i2, j2 in [(i - 1, j), (i, j - 1), (i + 1, j), (i, j + 1)]:
-                    g.add_edge((i, j, k), (i2, j2, k), weight=1)
-                for k2 in set(equipment) - {k}:
-                    g.add_edge((i, j, k), (i, j, k2), weight=7)
+    for i, j in np.ndindex(geo_idx.shape):
+        allowed_from = allowed_equipment[cave_type[i, j]]
+        for k in allowed_from:
+            for i2, j2 in [(i - 1, j), (i, j - 1), (i + 1, j), (i, j + 1)]:
+                if i2 < 0 or j2 < 0 or i2 >= geo_idx.shape[0] or j2 >= geo_idx.shape[1]:
+                    continue
+                allowed_to = allowed_equipment[cave_type[i2, j2]]
+                if k not in allowed_to:
+                    continue
+                g.add_edge((i, j, k), (i2, j2, k), weight=1)
+            for k2 in allowed_from - {k}:
+                g.add_edge((i, j, k), (i, j, k2), weight=7)
 
+    # path = nx.dijkstra_path(g, (0, 0, TORCH), (target[0], target[1], TORCH))
+    # print(path)
     path_length = nx.dijkstra_path_length(g, (0, 0, TORCH), (target[0], target[1], TORCH))
     print(path_length)
 
@@ -109,15 +119,15 @@ if __name__ == '__main__':
     print(time() - start)
 
 '''
-M=.|=.|.|=.   M=.|=.|.|=.
-.|=|=|||..|   .|=|=|||..|
-.==|....||=   .==|....||=
-=.|....|.==   =.|....|.==
-=|..==...=.   =|..==...=.
-=||.=.=||=|   =||.=.=||=|
-|.=.===|||.   |.=.===|||.
-|..==||=.|=   |..==||=.|=
-.=..===..=|   .=..===..=|
-.======|||=   .======|||=
-.===|=|===T   .===|=|===T
+M=.|=.|.|=.
+.|=|=|||..|
+.==|....||=
+=.|....|.==
+=|..==...=.
+=||.=.=||=|
+|.=.===|||.
+|..==||=.|=
+.=..===..=|
+.======|||=
+.===|=|===T
 '''
