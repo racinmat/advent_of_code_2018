@@ -184,7 +184,7 @@ def part_1():
     distances = calculate_all_distances_from_position(grid, start_pos - [min_y, min_x])
     print(int(np.round(distances.max() / 2)))
 
-# 9367 too high
+
 def part_2():
     regex, grid, start_pos = prepare_data()
     grid = process_path(grid, regex, start_pos.copy())
