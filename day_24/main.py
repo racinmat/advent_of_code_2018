@@ -63,10 +63,11 @@ class Group(object):
 
 
 def load_input():
-    groups = []
+    # groups = []
+    groups = set()
     curr_side = None
     i = 0
-    with open('test_input.txt', encoding='utf-8') as lines:
+    with open('input.txt', encoding='utf-8') as lines:
         for line in lines:
             line = line.replace('\n', '')
             if line == '':
@@ -96,7 +97,8 @@ def load_input():
                             immunities = types
                         if m.group(2) == 'weak':
                             weaknesses = types
-                groups.append(Group(curr_side, i, units, hp, immunities, weaknesses, attack_type, attack, initiative))
+                # groups.append(Group(curr_side, i, units, hp, immunities, weaknesses, attack_type, attack, initiative))
+                groups.add(Group(curr_side, i, units, hp, immunities, weaknesses, attack_type, attack, initiative))
     return groups
 
 
@@ -129,30 +131,41 @@ def tick(groups):
     free_targets = set(groups)
     attack_plan = dict()
     for group in sorted(groups, key=functools.cmp_to_key(target_selection_order_comparison)):
-        enemy = sorted(filter(lambda x: x.is_enemy(group), free_targets),
-                       key=functools.cmp_to_key(enemy_selection_order_comparison(group)))[0]
-        free_targets.remove(enemy)
+        enemies = sorted(filter(lambda x: x.is_enemy(group), free_targets),
+                         key=functools.cmp_to_key(enemy_selection_order_comparison(group)))
+        if len(enemies) > 0:
+            enemy = enemies[0]
+            free_targets.remove(enemy)
+        else:
+            enemy = None
         attack_plan[group] = enemy
 
     print(attack_plan)
     # attacking part
     for group in sorted(groups, key=functools.cmp_to_key(attack_order_comparison)):
         defender = attack_plan[group]
+        if defender is None:
+            continue
         units_killed = defender.be_attacked(group)
         print('{} attacks {}, killing {} units'.format(group.name(), defender.name(), units_killed))
         if defender.is_dead():
             groups.remove(defender)
     return groups
 
-
+# 21046 too low
 def part_1():
     groups = load_input()
     someone_wins = False
-    # num_rounds = 0
+    survived_units = dict()
     while not someone_wins:
         groups = tick(groups)
+        for side in Side:
+            side_groups = list(filter(lambda x: x.side == side, groups))
+            survived_units[side] = sum([g.units for g in side_groups])
+            if len(side_groups) == 0:
+                someone_wins = True
 
-    pass
+    print(max(survived_units.values()))
 
 
 def part_2():
