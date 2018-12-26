@@ -1,6 +1,7 @@
 import functools
 import re
 from collections import OrderedDict
+from copy import deepcopy
 from enum import Enum
 from math import floor
 from operator import itemgetter
@@ -134,7 +135,10 @@ def tick(groups):
                          key=functools.cmp_to_key(enemy_selection_order_comparison(group)))
         if len(enemies) > 0:
             enemy = enemies[0]
-            free_targets.remove(enemy)
+            if group.calc_damage_deal(enemy) > 0:
+                free_targets.remove(enemy)
+            else:
+                enemy = None
         else:
             enemy = None
         attack_plan[group] = enemy
@@ -154,37 +158,57 @@ def tick(groups):
     return groups
 
 
-# 21046 too low
-def part_1():
-    groups = load_input()
-
+def evaluate_groups(groups, power_boost=0):
     print()
-    [print(g) for g in sorted(groups, key=lambda x: x.name())]
+    [print(g) for g in sorted(groups, key=lambda x: (x.side.name, x.number))]
     print()
+    for g in groups:
+        if g.side == Side.IMMUNE_SYSTEM:
+            g.attack += power_boost
 
     someone_wins = False
     survived_units = dict()
+    prev_survived_units = dict()
+    round_count = 0
     while not someone_wins:
         groups = tick(groups)
-
+        round_count += 1
         print()
-        [print(g) for g in sorted(groups, key=lambda x: x.name())]
+        [print(g) for g in sorted(groups, key=lambda x: (x.side.name, x.number))]
         print()
-
         for side in Side:
             side_groups = list(filter(lambda x: x.side == side, groups))
             survived_units[side] = sum([g.units for g in side_groups])
             if len(side_groups) == 0:
                 someone_wins = True
+        # print(survived_units)
+        # print()
+        # tie game detection
+        if survived_units == prev_survived_units:
+            return survived_units
+        prev_survived_units = survived_units.copy()
+    return survived_units
 
-        print(survived_units)
-        print()
+
+def part_1():
+    groups = load_input()
+    survived_units = evaluate_groups(groups, 59)
 
     print(max(survived_units.values()))
 
-
+# 790 too high
 def part_2():
-    pass
+    groups = load_input()
+    immunity_won = False
+    power_boost = 0
+    survived_units = None
+    while not immunity_won:
+        survived_units = evaluate_groups(deepcopy(groups), power_boost)
+        immunity_won = survived_units[Side.IMMUNE_SYSTEM] > 0 and survived_units[Side.INFECTION] == 0
+        print('immunity boost is now ', power_boost, 'its resulting armies are: ', survived_units)
+        power_boost += 1
+
+    print(max(survived_units.values()))
 
 
 if __name__ == '__main__':
@@ -193,6 +217,6 @@ if __name__ == '__main__':
     start = time()
 
     part_1()
-    part_2()
+    # part_2()
 
     print(time() - start)
