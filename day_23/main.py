@@ -46,15 +46,20 @@ def part_2():
     #             for p2 in range(point[2] - remain_dist, point[2] + remain_dist + 1):
     #                 range_set.add((p0, p1, p2))
     #     points_in_range.append(range_set)
-    dense_dists = spatial.distance.pdist(points, metric='cityblock')
-    distances = spatial.distance.squareform(dense_dists)
-    sum_ranges = rs + rs[:, np.newaxis] - np.eye(rs.shape[0]) * rs * 2
-    share_point = distances - sum_ranges
-    share_point_dense = spatial.distance.squareform(share_point)
 
-    print('dont share any point', np.sum(share_point_dense >= 0))
-    print('share some points', np.sum(share_point_dense < 0))
+    # dense_dists = spatial.distance.pdist(points, metric='cityblock')
+    # distances = spatial.distance.squareform(dense_dists)
+    # sum_ranges = rs + rs[:, np.newaxis] - np.eye(rs.shape[0]) * rs * 2
+    # share_point = distances - sum_ranges
+    # share_point_dense = spatial.distance.squareform(share_point)
+    #
+    # print('dont share any point', np.sum(share_point_dense >= 0))
+    # print('share some points', np.sum(share_point_dense < 0))
 
+    # mean for prunning estimate
+    centroid = np.mean(points, axis=0).astype(np.int32)
+    in_range = spatial.distance.cdist(centroid[np.newaxis, :], points, metric='cityblock') <= rs
+    np.sum(in_range)
     print()
 
 

@@ -65,7 +65,6 @@ def print_grid(cave_type):
     print()
 
 
-# 7905 too low
 def part_1():
     depth, target = load_input()
 

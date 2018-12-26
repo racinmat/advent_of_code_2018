@@ -122,9 +122,7 @@ def find_first_step_in_path_to_nearest_target(grid, begin, targets):
         updated_neighbours = set()
         for node in open_nodes:
             neighbours = get_free_neighbours(grid, node)
-            # changing this line gives different results, tiebreaking in dijkstra looks broken, fix it
             neighbours_to_update = neighbours[np.where(distances[tuple(neighbours.T)] >= distances[tuple(node)] + 1)]
-            # neighbours_to_update = neighbours[np.where(distances[tuple(neighbours.T)] > distances[tuple(node)] + 1)]
             updated_neighbours = updated_neighbours.union(set([tuple(i.tolist()) for i in neighbours_to_update]))
             for n in neighbours_to_update:
                 n = tuple(n)
