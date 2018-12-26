@@ -3,6 +3,7 @@ import re
 from collections import OrderedDict
 from enum import Enum
 from math import floor
+from operator import itemgetter
 
 import numpy as np
 
@@ -31,7 +32,7 @@ class Group(object):
             self.attack, self.initiative)
 
     def __hash__(self) -> int:
-        return hash(self.side) + hash(self.number) + hash(self.initiative)  # this should be unique per group
+        return hash(self.side) + hash(self.number) * 67 + hash(self.initiative)  # this should be unique per group
 
     def __eq__(self, o: object) -> bool:
         return hash(self) == hash(o)
@@ -63,7 +64,6 @@ class Group(object):
 
 
 def load_input():
-    # groups = []
     groups = set()
     curr_side = None
     i = 0
@@ -97,7 +97,6 @@ def load_input():
                             immunities = types
                         if m.group(2) == 'weak':
                             weaknesses = types
-                # groups.append(Group(curr_side, i, units, hp, immunities, weaknesses, attack_type, attack, initiative))
                 groups.add(Group(curr_side, i, units, hp, immunities, weaknesses, attack_type, attack, initiative))
     return groups
 
@@ -140,9 +139,11 @@ def tick(groups):
             enemy = None
         attack_plan[group] = enemy
 
-    print(attack_plan)
     # attacking part
     for group in sorted(groups, key=functools.cmp_to_key(attack_order_comparison)):
+        if group not in groups:
+            # someone dead takes turn
+            continue
         defender = attack_plan[group]
         if defender is None:
             continue
@@ -152,18 +153,32 @@ def tick(groups):
             groups.remove(defender)
     return groups
 
+
 # 21046 too low
 def part_1():
     groups = load_input()
+
+    print()
+    [print(g) for g in sorted(groups, key=lambda x: x.name())]
+    print()
+
     someone_wins = False
     survived_units = dict()
     while not someone_wins:
         groups = tick(groups)
+
+        print()
+        [print(g) for g in sorted(groups, key=lambda x: x.name())]
+        print()
+
         for side in Side:
             side_groups = list(filter(lambda x: x.side == side, groups))
             survived_units[side] = sum([g.units for g in side_groups])
             if len(side_groups) == 0:
                 someone_wins = True
+
+        print(survived_units)
+        print()
 
     print(max(survived_units.values()))
 
