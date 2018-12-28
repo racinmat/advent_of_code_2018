@@ -109,25 +109,25 @@ def part_2():
     # in_range = spatial.distance.cdist(centroid[np.newaxis, :], points, metric='cityblock') <= rs
     # np.sum(in_range)
     def z3abs(x):
+        # z3.fpAbs is not working on integers, somehow, this works
         return z3.If(x >= 0, x, -x)
 
     coords = z3.Ints('x y z')
     s = z3.Optimize()
     in_ranges = z3.Ints(' '.join('p'+str(i) for i in range(len(points))))
     for i, (point, r) in enumerate(zip(points, rs)):
+        # coords_diff = [z3abs(j - int(k)) for j, k in zip(coords, point)]  # casting from numpy type to pure python
         coords_diff = [z3abs(j - int(k)) for j, k in zip(coords, point)]  # casting from numpy type to pure python
         manhattan_dist = z3.Sum(coords_diff)
         s.add(z3.If(manhattan_dist <= int(r), 1, 0) == in_ranges[i])
-    range_count = z3.Int('range_count')
     dist_from_zero = z3.Int('dist')
-    x, y, z = coords
-    s.add(dist_from_zero == (z3abs(x) + z3abs(y) + z3abs(z)))
-    s.add(range_count == z3.Sum(in_ranges))
-    s.maximize(range_count)
+    # s.add(dist_from_zero == z3.Sum([z3abs(i) for i in coords]))
+    s.add(dist_from_zero == z3.Sum([z3abs(i) for i in coords]))
+    s.maximize(z3.Sum(in_ranges))
     s.minimize(dist_from_zero)
     res = s.check()
     m = s.model()
-    print(m[x], m[y], m[z], m[dist_from_zero])
+    print([m[i] for i in coords], m[dist_from_zero])
 
 
 if __name__ == '__main__':
