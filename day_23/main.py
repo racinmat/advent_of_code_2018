@@ -2,6 +2,7 @@ import re
 import numpy as np
 import networkx as nx
 from scipy import spatial
+import z3
 
 
 def load_input():
@@ -26,6 +27,54 @@ def part_1():
 
 def part_2():
     points, rs = load_input()
+
+    # just some playing with z3
+    # a = z3.Real('a')
+    # b = z3.Real('b')
+    # s = z3.Solver()
+    # s.add(a + b == 5)
+    # s.add(a - 2*b == 3)
+    # s.add(a - 2*b == 3)
+    # check_result = s.check()
+    # m = s.model()
+    # print(m[a])
+    # print(m[b])
+
+    # a = z3.Real('a')
+    # b = z3.Real('b')
+    # c = z3.Real('c')
+    # d = z3.Real('d')
+    # s = z3.Optimize()
+    # s.add()
+    # s.add(a <= 5)
+    # s.add(b <= 10)
+    # s.add(b >= c)
+    # s.add(a >= d)
+    # obj = s.maximize(a + b + c + d)
+    # while s.check() == z3.sat:
+    #     m = s.model()
+    #     print(m[a])
+    #     print(m[b])
+    #     print(m[c])
+    #     print(m[d])
+    #     print(obj.value())
+    # check_res = s.check()
+    # m = s.model()
+    # print(m[a])
+    # print(m[b])
+    # print(m[c])
+    # print(m[d])
+    # print(obj.value())
+
+    # x, y = z3.Ints('x y')
+    # opt = z3.Optimize()
+    # opt.set(priority='pareto')
+    # opt.add(x + y == 10, x >= 0, y >= 0)
+    # mx = opt.maximize(x)
+    # my = opt.maximize(y)
+    # while opt.check() == z3.sat:
+    #     print(mx.value(), my.value())
+    # pass
     # reaches = np.zeros((np.max(points[:, 0]), np.max(points[:, 1]), np.max(points[:, 2])))
     # grid_indices = np.array(list(np.ndindex(reaches.shape)))
     # for point, r in zip(points, rs):
@@ -56,10 +105,29 @@ def part_2():
     # print('share some points', np.sum(share_point_dense < 0))
 
     # mean for prunning estimate
-    centroid = np.mean(points, axis=0).astype(np.int32)
-    in_range = spatial.distance.cdist(centroid[np.newaxis, :], points, metric='cityblock') <= rs
-    np.sum(in_range)
-    print()
+    # centroid = np.mean(points, axis=0).astype(np.int32)
+    # in_range = spatial.distance.cdist(centroid[np.newaxis, :], points, metric='cityblock') <= rs
+    # np.sum(in_range)
+    def z3abs(x):
+        return z3.If(x >= 0, x, -x)
+
+    coords = z3.Ints('x y z')
+    s = z3.Optimize()
+    in_ranges = z3.Ints(' '.join('p'+str(i) for i in range(len(points))))
+    for i, (point, r) in enumerate(zip(points, rs)):
+        coords_diff = [z3abs(j - int(k)) for j, k in zip(coords, point)]  # casting from numpy type to pure python
+        manhattan_dist = z3.Sum(coords_diff)
+        s.add(z3.If(manhattan_dist <= int(r), 1, 0) == in_ranges[i])
+    range_count = z3.Int('range_count')
+    dist_from_zero = z3.Int('dist')
+    x, y, z = coords
+    s.add(dist_from_zero == (z3abs(x) + z3abs(y) + z3abs(z)))
+    s.add(range_count == z3.Sum(in_ranges))
+    s.maximize(range_count)
+    s.minimize(dist_from_zero)
+    res = s.check()
+    m = s.model()
+    print(m[x], m[y], m[z], m[dist_from_zero])
 
 
 if __name__ == '__main__':
